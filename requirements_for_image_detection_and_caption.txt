@@ -1,0 +1,9 @@
+transformers==4.39.2
+numpy
+opencv-python
+ultralytics
+typing-extensions
+typing
+requests
+torch
+pathlib

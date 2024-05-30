@@ -1,0 +1,6 @@
+read these from this file and make a connection with db
+
+host=localhost
+user=root
+password=1*AllahAkbarMJ
+database=sd-webui-local
