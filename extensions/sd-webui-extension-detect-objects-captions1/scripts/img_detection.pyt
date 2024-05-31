@@ -1,5 +1,5 @@
 import os
-from transformers import AutoProcessor, LlavaForConditionalGeneration, BitsAndBytesConfig
+from transformers import AutoProcessor, LlavaForConditionalGeneration, BitsAndBytesConfig, LlavaNextProcessor, LlavaNextForConditionalGeneration, VipLlavaForConditionalGeneration
 import transformers
 import time
 from datetime import datetime
@@ -52,6 +52,60 @@ def load_image(image_path_or_url: str) -> Image.Image:
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+def generate_image_caption2(image_path_or_url: str, model_id: str) -> List[str]:
+    try:
+        question = "What is your assessment for this image?"
+        prompt = f"A chat between a curious human and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the human's questions.###Human: <image>\n{question}###Assistant:"
+        raw_image = load_image(image_path_or_url)
+        processor = AutoProcessor.from_pretrained(model_id)
+        quantization_config = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4",bnb_4bit_compute_dtype=torch.float16)
+        model = VipLlavaForConditionalGeneration.from_pretrained(model_id, low_cpu_mem_usage=True, quantization_config=quantization_config)
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+
+        inputs = processor(prompt, raw_image, return_tensors='pt').to(device, torch.float16)
+        output = model.generate(**inputs, max_new_tokens=200, do_sample=False)
+        captions_text = processor.decode(output[0][2:], skip_special_tokens=True)
+        captions_cleaned = captions_text[len(prompt):]
+        sentences = [sentence.strip() for sentence in re.split(r'(?<=[.])\s+', captions_cleaned) if sentence]
+
+        safe_texts = []
+        for sentence in sentences:
+            safe_text = sentence.replace("'", "''")
+            safe_texts.append(safe_text)
+        
+        return safe_texts
+    except Exception as e:
+        logger.error(f"Error generating caption: {e}")
+        raise
+
+def generate_image_caption1(image_path_or_url: str, model_id: str) -> List[str]:
+    try:
+        raw_image = load_image(image_path_or_url)
+        processor = LlavaNextProcessor.from_pretrained(model_id)
+        quantization_config = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4",bnb_4bit_compute_dtype=torch.float16)
+        model = LlavaNextForConditionalGeneration.from_pretrained(model_id, low_cpu_mem_usage=True, quantization_config=quantization_config)
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        model.to(device)
+
+        prompt = "[INST] <image>\nWhat is your assessment for this image? [/INST]"
+        inputs = processor(prompt, raw_image, return_tensors='pt').to(device, torch.float16)
+        
+        output = model.generate(**inputs, max_new_tokens=200, do_sample=False)
+        captions_text = processor.decode(output[0], skip_special_tokens=True)
+        
+        captions_cleaned = captions_text[len(prompt)-5:]
+        sentences = [sentence.strip() for sentence in re.split(r'(?<=[.])\s+', captions_cleaned) if sentence]
+
+        safe_texts = []
+        for sentence in sentences:
+            safe_text = sentence.replace("'", "''")
+            safe_texts.append(safe_text)
+        
+        return safe_texts
+    except Exception as e:
+        logger.error(f"Error generating caption: {e}")
+        raise
 
 def generate_image_caption(image_path_or_url: str, model_id: str) -> List[str]:
     try:
@@ -136,7 +190,14 @@ def detect_image(image_path_or_url: str, isCaption: str, model_path: str):
   
     if isCaption == "True":
         capModel = model_path
-        safe_texts = generate_image_caption(image_path_or_url = image_path_or_url, model_id = capModel)
+        safe_texts = []
+        if capModel == "llava-v1.6-mistral-7b-hf":
+             safe_texts = generate_image_caption1(image_path_or_url = image_path_or_url, model_id = "llava-hf/llava-v1.6-mistral-7b-hf")
+        elif capModel == "llava-1.5-7b-hf":
+            safe_texts = generate_image_caption(image_path_or_url = image_path_or_url, model_id = "llava-hf/llava-1.5-7b-hf")
+        elif capModel == "vip-llava-7b-hf":
+            safe_texts = generate_image_caption2(image_path_or_url = image_path_or_url, model_id = "llava-hf/vip-llava-7b-hf")
+                          
         created_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     
         val3 = []
@@ -145,7 +206,7 @@ def detect_image(image_path_or_url: str, isCaption: str, model_path: str):
             if len(t) < capLen:
                 continue
 
-            val3.append((maxCapId, maxImgId, t, capModel.split('/')[-1], created_at))
+            val3.append((maxCapId, maxImgId, t, capModel, created_at))
             maxCapId += 1
 
         mycursor.executemany(sql6, val3)
@@ -158,11 +219,6 @@ def detect_image(image_path_or_url: str, isCaption: str, model_path: str):
         mycursor.execute(sql9)
         objs = mycursor.fetchall()
         for i in range(0, len(objs)):
-            bb = json.loads(objs[i][1])
-            width = bb.get('width')
-            height = bb.get("height")
-            if(width < objWidth or height < objHeight):
-                continue
 
             safe_texts = generate_image_caption(image_path_or_url = assetsDir+'/{img_id}-{obj_id}.jpg'.format(img_id = maxImgId, obj_id = objs[i][0]), model_id = capModel)
             safe_txt_List = []
@@ -172,7 +228,7 @@ def detect_image(image_path_or_url: str, isCaption: str, model_path: str):
 
             created_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-            val4.append((maxObjCapId, objs[i][0], maxImgId, json.dumps(safe_txt_List), capModel.split('/')[-1], created_at))
+            val4.append((maxObjCapId, objs[i][0], maxImgId, json.dumps(safe_txt_List), capModel, created_at))
         
             maxObjCapId += 1
 
@@ -206,7 +262,7 @@ def detect_image(image_path_or_url: str, isCaption: str, model_path: str):
                 continue
 
             box = json.dumps({"x":boxes[i][0], "y":boxes[i][1], "width":width, "height":height})
-            val2.append((maxObjId, maxImgId, "YOLOv3", names[i], assetsDir[len(os.getenv('LOCALAPPDATA')):]+'/{img_id}-{obj_id}.jpg'.format(img_id = maxImgId, obj_id = maxObjId), confs[i], box,   created_at))
+            val2.append((maxObjId, maxImgId, model_path, names[i], assetsDir[len(os.getenv('LOCALAPPDATA')):]+'/{img_id}-{obj_id}.jpg'.format(img_id = maxImgId, obj_id = maxObjId), confs[i], box,   created_at))
             obj = image[boxes[i][1]:boxes[i][3], boxes[i][0]:boxes[i][2]]
             cv2.imwrite(assetsDir+'/{img_id}-{obj_id}.jpg'.format(img_id = maxImgId, obj_id = maxObjId), obj)
             maxObjId += 1

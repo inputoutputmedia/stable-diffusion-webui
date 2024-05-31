@@ -17,8 +17,8 @@ import launch
 # if not launch.is_installed("numpy"):
 #     launch.run_pip("install numpy", "requirements for objectsAndCaptionsDetection")
 
-# if not launch.is_installed("ultralytics"):
-#     launch.run_pip("install ultralytics", "requirements for objectsAndCaptionsDetection")
+if not launch.is_installed("ultralytics"):
+    launch.run_pip("install ultralytics", "requirements for objectsAndCaptionsDetection")
 
 # if not launch.is_installed("mysql-connector-python"):
 #     launch.run_pip("install mysql-connector-python", "requirements for objectsAndCaptionsDetection")

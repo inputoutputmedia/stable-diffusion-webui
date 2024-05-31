@@ -5,6 +5,7 @@ from modules.processing import process_images, Processed
 from modules.processing import Processed
 from modules.shared import opts, cmd_opts, state
 from PIL import Image
+from ultralytics import YOLO
 import time 
 import requests
 from io import BytesIO
@@ -56,7 +57,7 @@ import sqlite3
 
 detectProcessDurations = None
 
-def multi_img_detection(progress=gr.Progress()):
+def multi_img_detection(dm = "yolov3u.pt", progress=gr.Progress()):
     global addedImgIndex
     global added_imgs
     global imgclicked
@@ -71,7 +72,7 @@ def multi_img_detection(progress=gr.Progress()):
         endTimes = [start]
         #processes = ["Object Detection"]
         for i in progress.tqdm(range(0,len(added_imgs)), desc="Processing..."):
-                op = subprocess.Popen(["python", "extensions/sd-webui-extension-detect-objects-captions1/scripts/multi_img_detection.pyt", added_imgs[i], "False", "yolov3u.pt", str(maxImgId)], stdout=subprocess.PIPE, universal_newlines=True)
+                op = subprocess.Popen(["python", "extensions/sd-webui-extension-detect-objects-captions1/scripts/multi_img_detection.pyt", added_imgs[i], "False", dm, str(maxImgId)], stdout=subprocess.PIPE, universal_newlines=True)
                 iter_line = iter(op.stdout.readline, "") 
                 while(True):
                     stdout_line = next(iter_line)
@@ -101,7 +102,7 @@ def multi_img_detection(progress=gr.Progress()):
     #return [None for i in range(0, 48)] + [None, "Error", "Add Images first"]
     return "Error"
 
-def multi_img_caption(progress=gr.Progress()):
+def multi_img_caption(cm = "llava-1.5-7b-hf", progress=gr.Progress()):
     global addedImgIndex
     global added_imgs
     global imgclicked
@@ -115,7 +116,7 @@ def multi_img_caption(progress=gr.Progress()):
         endTimes = [start]
         processes = ["Object Detection", "Caption Detection", "Object Caption Detection"]
         for i in progress.tqdm(range(0,len(added_imgs)), desc="Processing..."):
-                op = subprocess.Popen(["python", "extensions/sd-webui-extension-detect-objects-captions1/scripts/multi_img_detection.pyt", added_imgs[i], "True", "llava-hf/llava-1.5-7b-hf", str(maxImgId)], stdout=subprocess.PIPE, universal_newlines=True)
+                op = subprocess.Popen(["python", "extensions/sd-webui-extension-detect-objects-captions1/scripts/multi_img_detection.pyt", added_imgs[i], "True", cm, str(maxImgId)], stdout=subprocess.PIPE, universal_newlines=True)
                 iter_line = iter(op.stdout.readline, "") 
                 for j in range(0,2):   
                     while(True):
@@ -162,14 +163,14 @@ def reset_images():
         return [load_image(imgs[imgIndex])] + [None for i in range(0, 24)]
     return [None] + [None for i in range(0, 24)]
 
-def cap_detection(progress=gr.Progress()):
+def cap_detection(cm = "llava-1.5-7b-hf", progress=gr.Progress()):
     global totalDetDur
     if imgclicked != -1:
         start = time.time()
         processDurations = []
         endTimes = [start]
         processes = ["Caption Detection", "Object Caption Detection"]
-        op = subprocess.Popen(["python", "extensions/sd-webui-extension-detect-objects-captions1/scripts/img_detection.pyt", added_imgs[imgclicked], "True", "llava-hf/llava-1.5-7b-hf"], stdout=subprocess.PIPE, universal_newlines=True)
+        op = subprocess.Popen(["python", "extensions/sd-webui-extension-detect-objects-captions1/scripts/img_detection.pyt", added_imgs[imgclicked], "True", cm], stdout=subprocess.PIPE, universal_newlines=True)
         iter_line = iter(op.stdout.readline, "")     
         for i in progress.tqdm(range(0,2), desc="Processing..."):
             while(True):
@@ -196,14 +197,14 @@ def cap_detection(progress=gr.Progress()):
     
     return "Select Image"
 
-def img_detection(progress=gr.Progress()):
+def img_detection(dm = "yolov3u.pt", progress=gr.Progress()):
     global totalDetDur
     if imgclicked != -1:
         start = time.time()
         processDurations = []
         endTimes = [start]
         processes = ["Object Detection"]
-        op = subprocess.Popen(["python", "extensions/sd-webui-extension-detect-objects-captions1/scripts/img_detection.pyt", added_imgs[imgclicked], "False", "yolov3u.pt"], stdout=subprocess.PIPE, universal_newlines=True)
+        op = subprocess.Popen(["python", "extensions/sd-webui-extension-detect-objects-captions1/scripts/img_detection.pyt", added_imgs[imgclicked], "False", dm], stdout=subprocess.PIPE, universal_newlines=True)
         iter_line = iter(op.stdout.readline, "")     
         for i in progress.tqdm(range(0,1), desc="Processing..."):
             while(True):
@@ -526,6 +527,9 @@ mycursor = None
      
 def on_ui_tabs():
   subprocess.call(['pip', 'install', '-r', 'requirements_for_image_detection_and_caption.txt'])
+  YOLO("yolov3u.pt")
+  YOLO("yolov5x6u.pt")
+  YOLO("yolov8x.pt")
   global mycursor
   label1 = None
   label2 = None
@@ -697,14 +701,10 @@ def on_ui_tabs():
           with gr.Row(elem_id = "importFR"):
              importF =  gr.Button(value="Import", variant="primary", scale = 1, size="sm", elem_id = "importF", elem_classes = "import0")
           importFDone = gr.Label(value="", show_label=False, container = False, elem_id = "id1")
-          with gr.Column(scale=1):
-                pass
-          with gr.Column(scale=1):
-                pass 
-          with gr.Column(scale=1):
-                pass 
-          with gr.Column(scale=1):
-                pass 
+          gr.Label(value="Select Detection Model", show_label=False, container = False, elem_id = "sdm")
+          sdm = gr.Dropdown(["yolov3u.pt", "yolov5x6u.pt", "yolov8x.pt"], value = "yolov3u.pt", show_label=False, container = False, elem_id = "ddd")
+          gr.Label(value="Select Caption Model", show_label=False, container = False, elem_id = "scm")
+          scm = gr.Dropdown(["llava-1.5-7b-hf", "llava-v1.6-mistral-7b-hf", "vip-llava-7b-hf"], value = "llava-1.5-7b-hf", show_label=False, container = False, elem_id = "cdd")
           with gr.Column(scale=1):
                 pass 
           with gr.Column(scale=1):
@@ -811,10 +811,10 @@ def on_ui_tabs():
                         reset2 = gr.Button(value = "Reset", size="sm", min_width = 30, elem_id = "reset2")
                         save2 = gr.Button(value = "Save", size="sm", min_width = 30, elem_id = "save2")
             capsv = gr.Label(value="", show_label=False, container = False)               
-      caption.click(cap_detection, outputs=[label2]).then(None, None, None, _js = "enabled_buttons")
-      detect.click(img_detection, outputs=[label1])
-      multiCaption.click(multi_img_caption, outputs=[label2]).then(reset_images, None, outputs = [image] + [added_imgs[i] for i in range(24, 48)]).then(None, None, None, _js = "enabled_buttons")
-      multiDetect.click(multi_img_detection, outputs=[label1])
+      caption.click(cap_detection,  inputs=[scm],  outputs=[label2]).then(None, None, None, _js = "enabled_buttons")
+      detect.click(img_detection,  inputs=[sdm], outputs=[label1])
+      multiCaption.click(multi_img_caption, inputs=[scm], outputs=[label2]).then(reset_images, None, outputs = [image] + [added_imgs[i] for i in range(24, 48)]).then(None, None, None, _js = "enabled_buttons")
+      multiDetect.click(multi_img_detection, inputs=[sdm], outputs=[label1])
       add.click(no_fn, None, None, _js = "disable_buttons").then(no_fn, None, None, _js = "AddToDataBase")
       addAI.click(no_fn, None, None, _js = "disable_buttons").then(no_fn, None, None, _js = "AddMultiToDataBase")
       label1.change(label_rest, outputs = [label1])

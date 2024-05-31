@@ -2,7 +2,7 @@
 set PYTHON=
 set GIT=
 set VENV_DIR=
-set COMMANDLINE_ARGS=
+set COMMANDLINE_ARGS=--disable-safe-unpickle
 
 set "current_dir=%~dp0"
 cd /d "%current_dir%"
