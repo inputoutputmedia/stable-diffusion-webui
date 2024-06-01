@@ -299,9 +299,11 @@ def add_image():
     global imgclicked
     global imgIndex
     global imgs
-    if len(imgs) > 0 and addedImgIndex < 24:
+    if imgclicked != -1:
+       return [load_image(added_imgs[imgclicked])] + [load_image(imgs[i]) for i in range(0, min(len(imgs), 24))] + [None for i in range(min(len(imgs), 24), 24)] + [load_image(added_imgs[i]) for i in range(0, len(added_imgs))] + [None for i in range(len(added_imgs), 24)] 
+    elif len(imgs) > 0 and addedImgIndex < 24:
         added_imgs.append(imgs[imgIndex])
-        imgclicked = addedImgIndex
+        #imgclicked = addedImgIndex
         addedImgIndex += 1
         imgs = imgs[0:imgIndex]+imgs[imgIndex+1:len(imgs)]
         if imgIndex > 0:
@@ -358,7 +360,7 @@ def img_clicked(img_index):
       return load_image(imgs[img_index])
    else:   
       imgclicked = img_index-24
-      return load_image(added_imgs[img_index-24])
+      return load_image(added_imgs[imgclicked])
 
 def reset_objsettings():
      return [25,25,0.25]

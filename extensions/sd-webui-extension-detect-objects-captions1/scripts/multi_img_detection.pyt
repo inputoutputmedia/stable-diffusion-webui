@@ -86,7 +86,6 @@ def generate_image_caption1(image_path_or_url: str, model_id: str) -> List[str]:
         quantization_config = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4",bnb_4bit_compute_dtype=torch.float16)
         model = LlavaNextForConditionalGeneration.from_pretrained(model_id, low_cpu_mem_usage=True, quantization_config=quantization_config)
         device = "cuda" if torch.cuda.is_available() else "cpu"
-        model.to(device)
 
         prompt = "[INST] <image>\nWhat is your assessment for this image? [/INST]"
         inputs = processor(prompt, raw_image, return_tensors='pt').to(device, torch.float16)
@@ -107,7 +106,7 @@ def generate_image_caption1(image_path_or_url: str, model_id: str) -> List[str]:
         logger.error(f"Error generating caption: {e}")
         raise
 
-def generate_image_caption(image_path_or_url: str, model_id: str) -> List[str]:
+def generate_image_caption0(image_path_or_url: str, model_id: str) -> List[str]:
     try:
         raw_image = load_image(image_path_or_url)
         # specify how to quantize the model
@@ -133,6 +132,16 @@ def generate_image_caption(image_path_or_url: str, model_id: str) -> List[str]:
     except Exception as e:
         logger.error(f"Error generating caption: {e}")
         raise
+
+def generate_image_caption(image_path_or_url: str, model_id: str) -> List[str]:
+        if model_id == "llava-v1.6-mistral-7b-hf":
+             return generate_image_caption1(image_path_or_url = image_path_or_url, model_id = "llava-hf/llava-v1.6-mistral-7b-hf")
+        elif model_id == "llava-1.5-7b-hf":
+            return generate_image_caption0(image_path_or_url = image_path_or_url, model_id = "llava-hf/llava-1.5-7b-hf")
+        elif model_id == "vip-llava-7b-hf":
+            return generate_image_caption2(image_path_or_url = image_path_or_url, model_id = "llava-hf/vip-llava-7b-hf")
+        
+        return []
 
 currentDir = str(Path(os.getcwd()).absolute())
 
@@ -186,14 +195,7 @@ def detect_image(image_path_or_url: str, isCaption: str, model_path: str, maxImg
     maxObjCapId = mycursor.fetchone()[0] + 1
   
     if isCaption == "True":
-        capModel = model_path
-        safe_texts = []
-        if capModel == "llava-v1.6-mistral-7b-hf":
-             safe_texts = generate_image_caption1(image_path_or_url = image_path_or_url, model_id = "llava-hf/llava-v1.6-mistral-7b-hf")
-        elif capModel == "llava-1.5-7b-hf":
-            safe_texts = generate_image_caption(image_path_or_url = image_path_or_url, model_id = "llava-hf/llava-1.5-7b-hf")
-        elif capModel == "vip-llava-7b-hf":
-            safe_texts = generate_image_caption2(image_path_or_url = image_path_or_url, model_id = "llava-hf/vip-llava-7b-hf")
+        safe_texts = generate_image_caption(image_path_or_url=image_path_or_url, model_id=model_path)
 
         created_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     
@@ -203,7 +205,7 @@ def detect_image(image_path_or_url: str, isCaption: str, model_path: str, maxImg
             if len(t) < capLen:
                 continue
 
-            val3.append((maxCapId, maxImgId, t, capModel, created_at))
+            val3.append((maxCapId, maxImgId, t, model_path, created_at))
             maxCapId += 1
 
         mycursor.executemany(sql6, val3)
@@ -217,7 +219,7 @@ def detect_image(image_path_or_url: str, isCaption: str, model_path: str, maxImg
         objs = mycursor.fetchall()
         for i in range(0, len(objs)):
 
-            safe_texts = generate_image_caption(image_path_or_url = assetsDir+'/{img_id}-{obj_id}.jpg'.format(img_id = maxImgId, obj_id = objs[i][0]), model_id = capModel)
+            safe_texts = generate_image_caption(image_path_or_url = assetsDir+'/{img_id}-{obj_id}.jpg'.format(img_id = maxImgId, obj_id = objs[i][0]), model_id = model_path)
             safe_txt_List = []
             for t in safe_texts:
                 if len(t) >= capLen:
@@ -225,7 +227,7 @@ def detect_image(image_path_or_url: str, isCaption: str, model_path: str, maxImg
 
             created_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-            val4.append((maxObjCapId, objs[i][0], maxImgId, json.dumps(safe_txt_List), capModel, created_at))
+            val4.append((maxObjCapId, objs[i][0], maxImgId, json.dumps(safe_txt_List), model_path, created_at))
         
             maxObjCapId += 1
 
