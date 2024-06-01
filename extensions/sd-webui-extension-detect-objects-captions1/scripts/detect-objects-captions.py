@@ -528,7 +528,7 @@ def isSQLite3(filename):
 mycursor = None
      
 def on_ui_tabs():
-  subprocess.call(['pip', 'install', '-r', 'requirements_for_image_detection_and_caption.txt'])
+  subprocess.call(['pip', 'install', '-r', 'extensions/sd-webui-extension-detect-objects-captions1/requirements_for_image_detection_and_caption.txt'])
   YOLO("yolov3u.pt")
   YOLO("yolov5x6u.pt")
   YOLO("yolov8x.pt")
