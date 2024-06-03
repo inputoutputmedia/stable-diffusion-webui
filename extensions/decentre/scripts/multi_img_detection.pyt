@@ -154,7 +154,7 @@ currentDir = str(Path(os.getcwd()).absolute())
 #     password=lines[4].split('=')[1],
 #     database=lines[5].split('=')[1])
 
-assetsDir = os.getenv('LOCALAPPDATA')+"/sd-webui-extension/assets"
+assetsDir = os.getenv('LOCALAPPDATA')+"/Decentre/assets"
 
 isExist = os.path.exists(assetsDir)
 if not isExist:
@@ -163,7 +163,7 @@ if not isExist:
 
 # mycursor = mydb.cursor()
 
-settingsFile = currentDir+"/extensions/sd-webui-extension-detect-objects-captions1/settings.st"
+settingsFile = currentDir+"/extensions/decentre/settings.st"
 
 file = open(settingsFile, 'r')
 
@@ -174,7 +174,7 @@ capLen = int(file.readline()[20:])
 
 file.close()
 
-dbFile = os.getenv('LOCALAPPDATA')+"/sd-webui-extension/sdwebui_extention_local.db"
+dbFile = os.getenv('LOCALAPPDATA')+"/Decentre/decentre.db"
 db = sqlite3.connect(dbFile)
 mycursor = db.cursor()
 

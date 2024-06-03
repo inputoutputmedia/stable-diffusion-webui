@@ -37,7 +37,7 @@ import sqlite3
 #                 return ()
 
 #         def load_settings(_,self):
-#              settingsFile = "extensions/sd-webui-extension-detect-objects-captions1/settings.st"
+#              settingsFile = "extensions/decentre/settings.st"
 #              global objWidth   
 #              global objHeight 
 #              global confl 
@@ -57,6 +57,73 @@ import sqlite3
 
 detectProcessDurations = None
 
+def insert_multi_into_all_table_and_reset_images():
+
+   if len(added_imgs) > 0:
+       sql1 = "SELECT IFNULL(MAX(image_id), 0) FROM image_table"
+       mycursor.execute(sql1)
+       maxImgId = mycursor.fetchone()[0]+1
+       startImgId = maxImgId - len(added_imgs)
+       sql2 = ("INSERT INTO all_data_table (image_id, image_path, prompt_text, generation_time,"
+       +"user_id, username, email, role,"
+       +"user_created_at, object_id, detection_model_used," 
+       +"object_name, object_path, confidence_score," 
+       +"bounding_box, object_created_at, caption_id, caption_text," 
+       +"caption_model_used, caption_created_at, object_caption_id," 
+       +"object_caption_text, object_caption_model_used, object_caption_created_at) " 
+       +"SELECT a.image_id AS image_id, a.image_path AS image_path, a.prompt_text AS prompt_text, a.generation_time AS generation_time,"
+       +"a.user_id AS user_id, b.username AS username, b.email AS email, b.role as role,"
+       +"b.created_at AS user_created_at, c.object_id AS object_id, c.model_used AS detection_model_used,"
+       +"c.object_name AS object_name, c.object_path as object_path, c.confidence_score as confidence_score," 
+       +"c.bounding_box AS bounding_box, c.created_at AS object_created_at, d.caption_id AS caption_id, d.text AS caption_text," 
+       +"d.model_used AS caption_model_used, d.created_at AS caption_created_at, e.object_caption_id AS object_caption_id," 
+       +"e.caption_text AS object_caption_text, e.model_used AS object_caption_model_used, e.created_at AS object_caption_created_at " 
+       +"FROM image_table a INNER JOIN users b "
+       +"ON a.user_id = b.user_id "
+       +"INNER JOIN object_detection_table c "
+       +"ON a.image_id = c.image_id "
+       +"INNER JOIN captions_table d "
+       +"ON a.image_id = d.image_id "
+       +"INNER JOIN object_captions e "
+       +"ON a.image_id = e.image_id AND c.object_id = e.object_id WHERE a.image_id >= {startId} AND a.image_id < {maxId};".format(startId = startImgId, maxId = maxImgId))
+
+       mycursor.execute(sql2)
+       db.commit()
+   return reset_images()
+
+def insert_into_all_table():
+   
+   if imgclicked != -1:   
+       sql1 = "SELECT IFNULL(MAX(image_id), 0) FROM image_table"
+       mycursor.execute(sql1)
+       maxImgId = mycursor.fetchone()[0]
+       sql2 = ("INSERT INTO all_data_table (image_id, image_path, prompt_text, generation_time,"
+       +"user_id, username, email, role,"
+       +"user_created_at, object_id, detection_model_used," 
+       +"object_name, object_path, confidence_score," 
+       +"bounding_box, object_created_at, caption_id, caption_text," 
+       +"caption_model_used, caption_created_at, object_caption_id," 
+       +"object_caption_text, object_caption_model_used, object_caption_created_at) " 
+       +"SELECT a.image_id AS image_id, a.image_path AS image_path, a.prompt_text AS prompt_text, a.generation_time AS generation_time,"
+       +"a.user_id AS user_id, b.username AS username, b.email AS email, b.role as role,"
+       +"b.created_at AS user_created_at, c.object_id AS object_id, c.model_used AS detection_model_used,"
+       +"c.object_name AS object_name, c.object_path as object_path, c.confidence_score as confidence_score," 
+       +"c.bounding_box AS bounding_box, c.created_at AS object_created_at, d.caption_id AS caption_id, d.text AS caption_text," 
+       +"d.model_used AS caption_model_used, d.created_at AS caption_created_at, e.object_caption_id AS object_caption_id," 
+       +"e.caption_text AS object_caption_text, e.model_used AS object_caption_model_used, e.created_at AS object_caption_created_at " 
+       +"FROM image_table a INNER JOIN users b "
+       +"ON a.user_id = b.user_id "
+       +"INNER JOIN object_detection_table c "
+       +"ON a.image_id = c.image_id "
+       +"INNER JOIN captions_table d "
+       +"ON a.image_id = d.image_id "
+       +"INNER JOIN object_captions e "
+       +"ON a.image_id = e.image_id AND c.object_id = e.object_id WHERE a.image_id = {maxId};".format(maxId = maxImgId))
+
+       mycursor.execute(sql2)
+       db.commit()
+   
+ 
 def multi_img_detection(dm = "yolov3u.pt", progress=gr.Progress()):
     global addedImgIndex
     global added_imgs
@@ -72,7 +139,7 @@ def multi_img_detection(dm = "yolov3u.pt", progress=gr.Progress()):
         endTimes = [start]
         #processes = ["Object Detection"]
         for i in progress.tqdm(range(0,len(added_imgs)), desc="Processing..."):
-                op = subprocess.Popen(["python", "extensions/sd-webui-extension-detect-objects-captions1/scripts/multi_img_detection.pyt", added_imgs[i], "False", dm, str(maxImgId)], stdout=subprocess.PIPE, universal_newlines=True)
+                op = subprocess.Popen(["python", "extensions/decentre/scripts/multi_img_detection.pyt", added_imgs[i], "False", dm, str(maxImgId)], stdout=subprocess.PIPE, universal_newlines=True)
                 iter_line = iter(op.stdout.readline, "") 
                 while(True):
                     stdout_line = next(iter_line)
@@ -83,7 +150,7 @@ def multi_img_detection(dm = "yolov3u.pt", progress=gr.Progress()):
                 maxImgId += 1        
 
         totalDetDur = endTimes[-1] - start
-        # with open(os.getenv('LOCALAPPDATA')+"/sd-webui-extension/Images_detected_log.txt", "a") as myfile:
+        # with open(os.getenv('LOCALAPPDATA')+"/Decentre/decentre_log.txt", "a") as myfile:
         #     myfile.write("Number of Images: {} \n".format(len(added_imgs)))
         #     for i in range(0,len(added_imgs)):
         #          myfile.write("Image {index} location: {url} \n".format(index = i+1, url = added_imgs[i])) 
@@ -116,7 +183,7 @@ def multi_img_caption(cm = "llava-1.5-7b-hf", progress=gr.Progress()):
         endTimes = [start]
         processes = ["Object Detection", "Caption Detection", "Object Caption Detection"]
         for i in progress.tqdm(range(0,len(added_imgs)), desc="Processing..."):
-                op = subprocess.Popen(["python", "extensions/sd-webui-extension-detect-objects-captions1/scripts/multi_img_detection.pyt", added_imgs[i], "True", cm, str(maxImgId)], stdout=subprocess.PIPE, universal_newlines=True)
+                op = subprocess.Popen(["python", "extensions/decentre/scripts/multi_img_detection.pyt", added_imgs[i], "True", cm, str(maxImgId)], stdout=subprocess.PIPE, universal_newlines=True)
                 iter_line = iter(op.stdout.readline, "") 
                 for j in range(0,2):   
                     while(True):
@@ -131,7 +198,7 @@ def multi_img_caption(cm = "llava-1.5-7b-hf", progress=gr.Progress()):
                             break
                 maxImgId += 1         
 
-        with open(os.getenv('LOCALAPPDATA')+"/sd-webui-extension/Images_detected_log.txt", "a") as myfile:
+        with open(os.getenv('LOCALAPPDATA')+"/Decentre/decentre_log.txt", "a") as myfile:
             myfile.write("Number of Images: {} \n".format(len(added_imgs)))
             for i in range(0,len(added_imgs)):
                  myfile.write("Image {index} location: {url} \n".format(index = i+1, url = added_imgs[i])) 
@@ -170,7 +237,7 @@ def cap_detection(cm = "llava-1.5-7b-hf", progress=gr.Progress()):
         processDurations = []
         endTimes = [start]
         processes = ["Caption Detection", "Object Caption Detection"]
-        op = subprocess.Popen(["python", "extensions/sd-webui-extension-detect-objects-captions1/scripts/img_detection.pyt", added_imgs[imgclicked], "True", cm], stdout=subprocess.PIPE, universal_newlines=True)
+        op = subprocess.Popen(["python", "extensions/decentre/scripts/img_detection.pyt", added_imgs[imgclicked], "True", cm], stdout=subprocess.PIPE, universal_newlines=True)
         iter_line = iter(op.stdout.readline, "")     
         for i in progress.tqdm(range(0,2), desc="Processing..."):
             while(True):
@@ -183,7 +250,7 @@ def cap_detection(cm = "llava-1.5-7b-hf", progress=gr.Progress()):
                      processDurations.append(time.time() - endTimes[-1])
                      endTimes.append(time.time()) 
                      break
-        with open(os.getenv('LOCALAPPDATA')+"/sd-webui-extension/Images_detected_log.txt", "a") as myfile:
+        with open(os.getenv('LOCALAPPDATA')+"/Decentre/decentre_log.txt", "a") as myfile:
             #myfile.write("Number of Images: {} \n".format(1))
             #myfile.write("Image {index} location: {url} \n".format(index = 1, url = added_imgs[imgclicked])) 
             for j in range (0,2):
@@ -204,7 +271,7 @@ def img_detection(dm = "yolov3u.pt", progress=gr.Progress()):
         processDurations = []
         endTimes = [start]
         processes = ["Object Detection"]
-        op = subprocess.Popen(["python", "extensions/sd-webui-extension-detect-objects-captions1/scripts/img_detection.pyt", added_imgs[imgclicked], "False", dm], stdout=subprocess.PIPE, universal_newlines=True)
+        op = subprocess.Popen(["python", "extensions/decentre/scripts/img_detection.pyt", added_imgs[imgclicked], "False", dm], stdout=subprocess.PIPE, universal_newlines=True)
         iter_line = iter(op.stdout.readline, "")     
         for i in progress.tqdm(range(0,1), desc="Processing..."):
             while(True):
@@ -214,7 +281,7 @@ def img_detection(dm = "yolov3u.pt", progress=gr.Progress()):
                      endTimes.append(time.time()) 
                      break
 
-        with open(os.getenv('LOCALAPPDATA')+"/sd-webui-extension/Images_detected_log.txt", "a") as myfile:
+        with open(os.getenv('LOCALAPPDATA')+"/Decentre/decentre_log.txt", "a") as myfile:
             myfile.write("Number of Images: {} \n".format(1))
             myfile.write("Image {index} location: {url} \n".format(index = 1, url = added_imgs[imgclicked])) 
             for j in range (0,1):
@@ -241,7 +308,7 @@ def update_images(image_directory = "", progress=gr.Progress()):
             imgclicked = -1
             added_imgs = []
             imgs = []
-            importedImagesFolder = os.getenv('LOCALAPPDATA')+"/sd-webui-extension/imported_images"
+            importedImagesFolder = os.getenv('LOCALAPPDATA')+"/Decentre/imported_images"
             importedImagesFolder = importedImagesFolder + "/" + datetime.now().strftime('%Y-%m-%d %H-%M-%S')    
             os.makedirs(importedImagesFolder) 
             for image_file in progress.tqdm(image_files, desc="Processing..."):
@@ -376,7 +443,7 @@ def save_settings(obj_width, obj_height,_conf_level, cap_length, progress=gr.Pro
      settings = ["Min object width: {} \n".format(obj_width), "Min object height: {} \n".format(obj_height), 
                  "Min confidence level: {} \n".format(_conf_level), "Min caption length: {} \n".format(cap_length)]
 
-     file = open('extensions/sd-webui-extension-detect-objects-captions1/settings.st', 'w')
+     file = open('extensions/decentre/settings.st', 'w')
 
      # Writing settings
      for i in progress.tqdm(range(4), desc="Processing..."):
@@ -420,7 +487,7 @@ def import_from_url(url, progress=gr.Progress()):
     #imgall=soup.find_all('img')
 
 
-    downloadDir = os.getenv('LOCALAPPDATA')+"/sd-webui-extension/imported_images"
+    downloadDir = os.getenv('LOCALAPPDATA')+"/Decentre/imported_images"
 
     downloadDir = downloadDir + "/" + datetime.now().strftime('%Y-%m-%d %H-%M-%S')    
     os.makedirs(downloadDir)    
@@ -526,17 +593,19 @@ def isSQLite3(filename):
     return header[0:16] == b'SQLite format 3\000'
 
 mycursor = None
+db = None
      
 def on_ui_tabs():
-  subprocess.call(['pip', 'install', '-r', 'extensions/sd-webui-extension-detect-objects-captions1/requirements_for_image_detection_and_caption.txt'])
+  subprocess.call(['pip', 'install', '-r', 'extensions/decentre/requirements_for_decentre.txt'])
   YOLO("yolov3u.pt")
   YOLO("yolov5x6u.pt")
   YOLO("yolov8x.pt")
   global mycursor
+  global db
   label1 = None
   label2 = None
   added_imgs = [None] * 48
-  settingsFile = "extensions/sd-webui-extension-detect-objects-captions1/settings.st"
+  settingsFile = "extensions/decentre/settings.st"
 
   file = open(settingsFile, 'r')
 
@@ -545,15 +614,15 @@ def on_ui_tabs():
   confl = float(file.readline()[22:])
   capLen = int(file.readline()[20:])
   
-  importedImagesFolder = os.getenv('LOCALAPPDATA')+"/sd-webui-extension/imported_images"
+  importedImagesFolder = os.getenv('LOCALAPPDATA')+"/Decentre/imported_images"
   isExist = os.path.exists(importedImagesFolder)
   if not isExist:
     # Create a new directory because it does not exist
     os.makedirs(importedImagesFolder)
 
 
-  sqlFile = os.getenv('LOCALAPPDATA')+"/sd-webui-extension/sdwebui_extention_local.sql"
-  dbFile = os.getenv('LOCALAPPDATA')+"/sd-webui-extension/sdwebui_extention_local.db"
+  sqlFile = os.getenv('LOCALAPPDATA')+"/Decentre/decentre.sql"
+  dbFile = os.getenv('LOCALAPPDATA')+"/Decentre/decentre.db"
   sql_script = ""  
 
   if(not isSQLite3(dbFile)):
@@ -568,9 +637,9 @@ def on_ui_tabs():
       db = sqlite3.connect(dbFile, check_same_thread=False)
       mycursor = db.cursor()
 
-  with gr.Blocks(analytics_enabled=False) as Objects_Detections_and_Captions:
+  with gr.Blocks(analytics_enabled=False) as Decentre:
     with gr.Column(elem_id = "columnMain"):
-      gr.Image("extensions/sd-webui-extension-detect-objects-captions1/decenter_studio.jpeg", height = 57, width = 160, show_label = False, container = False, show_download_button = False)
+      gr.Image("extensions/decentre/decenter_studio.jpeg", height = 57, width = 160, show_label = False, container = False, show_download_button = False)
       with gr.Row():
         with gr.Column(elem_classes = "panel3"):
           with gr.Row(elem_classes = "panel1", min_width=550):
@@ -813,9 +882,9 @@ def on_ui_tabs():
                         reset2 = gr.Button(value = "Reset", size="sm", min_width = 30, elem_id = "reset2")
                         save2 = gr.Button(value = "Save", size="sm", min_width = 30, elem_id = "save2")
             capsv = gr.Label(value="", show_label=False, container = False)               
-      caption.click(cap_detection,  inputs=[scm],  outputs=[label2]).then(None, None, None, _js = "enabled_buttons")
+      caption.click(cap_detection,  inputs=[scm],  outputs=[label2]).then(insert_into_all_table, None, None).then(None, None, None, _js = "enabled_buttons")
       detect.click(img_detection,  inputs=[sdm], outputs=[label1])
-      multiCaption.click(multi_img_caption, inputs=[scm], outputs=[label2]).then(reset_images, None, outputs = [image] + [added_imgs[i] for i in range(24, 48)]).then(None, None, None, _js = "enabled_buttons")
+      multiCaption.click(multi_img_caption, inputs=[scm], outputs=[label2]).then(insert_multi_into_all_table_and_reset_images, None, outputs = [image] + [added_imgs[i] for i in range(24, 48)]).then(None, None, None, _js = "enabled_buttons")
       multiDetect.click(multi_img_detection, inputs=[sdm], outputs=[label1])
       add.click(no_fn, None, None, _js = "disable_buttons").then(no_fn, None, None, _js = "AddToDataBase")
       addAI.click(no_fn, None, None, _js = "disable_buttons").then(no_fn, None, None, _js = "AddMultiToDataBase")
@@ -837,6 +906,6 @@ def on_ui_tabs():
       importUDone.change(label_rest, outputs = [importUDone])
       for i in range(0, 48):
          added_imgs[i].select(img_clicked, inputs = [gr.Number(value=i, precision=0, visible=False)], outputs = [image])       
-  return [(Objects_Detections_and_Captions, "Objects Detections and Captions", "Objects_Detections_and_Captions")]
+  return [(Decentre, "Decentre", "Decentre")]
 
 script_callbacks.on_ui_tabs(on_ui_tabs)
