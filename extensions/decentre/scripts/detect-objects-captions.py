@@ -78,13 +78,13 @@ def insert_multi_into_all_table_and_reset_images():
        +"c.bounding_box AS bounding_box, c.created_at AS object_created_at, d.caption_id AS caption_id, d.text AS caption_text," 
        +"d.model_used AS caption_model_used, d.created_at AS caption_created_at, e.object_caption_id AS object_caption_id," 
        +"e.caption_text AS object_caption_text, e.model_used AS object_caption_model_used, e.created_at AS object_caption_created_at " 
-       +"FROM image_table a INNER JOIN users b "
+       +"FROM image_table a LEFT JOIN users b "
        +"ON a.user_id = b.user_id "
-       +"INNER JOIN object_detection_table c "
+       +"LEFT JOIN object_detection_table c "
        +"ON a.image_id = c.image_id "
-       +"INNER JOIN captions_table d "
+       +"LEFT JOIN captions_table d "
        +"ON a.image_id = d.image_id "
-       +"INNER JOIN object_captions e "
+       +"LEFT JOIN object_captions e "
        +"ON a.image_id = e.image_id AND c.object_id = e.object_id WHERE a.image_id >= {startId} AND a.image_id < {maxId};".format(startId = startImgId, maxId = maxImgId))
 
        mycursor.execute(sql2)
@@ -111,13 +111,13 @@ def insert_into_all_table():
        +"c.bounding_box AS bounding_box, c.created_at AS object_created_at, d.caption_id AS caption_id, d.text AS caption_text," 
        +"d.model_used AS caption_model_used, d.created_at AS caption_created_at, e.object_caption_id AS object_caption_id," 
        +"e.caption_text AS object_caption_text, e.model_used AS object_caption_model_used, e.created_at AS object_caption_created_at " 
-       +"FROM image_table a INNER JOIN users b "
+       +"FROM image_table a LEFT JOIN users b "
        +"ON a.user_id = b.user_id "
-       +"INNER JOIN object_detection_table c "
+       +"LEFT JOIN object_detection_table c "
        +"ON a.image_id = c.image_id "
-       +"INNER JOIN captions_table d "
+       +"LEFT JOIN captions_table d "
        +"ON a.image_id = d.image_id "
-       +"INNER JOIN object_captions e "
+       +"LEFT JOIN object_captions e "
        +"ON a.image_id = e.image_id AND c.object_id = e.object_id WHERE a.image_id = {maxId};".format(maxId = maxImgId))
 
        mycursor.execute(sql2)

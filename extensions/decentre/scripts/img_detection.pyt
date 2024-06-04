@@ -111,7 +111,7 @@ def generate_image_caption0(image_path_or_url: str, model_id: str) -> List[str]:
         raw_image = load_image(image_path_or_url)
         # specify how to quantize the model
         quantization_config = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4",bnb_4bit_compute_dtype=torch.float16)
-        model = LlavaForConditionalGeneration.from_pretrained(model_id, quantization_config=quantization_config)
+        model = LlavaForConditionalGeneration.from_pretrained(model_id, low_cpu_mem_usage=True, quantization_config=quantization_config)
         processor = AutoProcessor.from_pretrained(model_id)
 
         prompt = "USER: <image>\nWhat is your assessment for this image?\nASSISTANT:"
