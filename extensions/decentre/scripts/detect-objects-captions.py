@@ -209,11 +209,7 @@ def multi_img_caption(cm = "llava-1.5-7b-hf", progress=gr.Progress()):
             totalDetDur = 0
             myfile.write("Total Duration: {dur}s \n".format(dur = totalDur))
             myfile.close()         
-                
-        addedImgIndex = 0
-        imgclicked = -1
-        added_imgs = []              
-     
+                             
         #return [None for i in range(0, 48)] + [None, "Detection Done", "Captions Done"]
         return "Captions Done"
     #return [None for i in range(0, 48)] + [None, "Error", "Add Images first"]
