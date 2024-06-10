@@ -250,7 +250,7 @@ def detect_image(image_path_or_url: str, isCaption: str, model_path: str):
         boxes,names, confs = predict_and_detect(model, image, classes=[], conf=confl)
         # image_id, image_path, prompt_text, generation_time, user_id
         created_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        val1 = (maxImgId, image_path_or_url[len(os.getenv('LOCALAPPDATA')):], "", created_at, 4)
+        val1 = (maxImgId, image_path_or_url, "", created_at, 4)
         mycursor.execute(sql3, val1)
         db.commit()
     
@@ -264,7 +264,7 @@ def detect_image(image_path_or_url: str, isCaption: str, model_path: str):
                 continue
 
             box = json.dumps({"x":boxes[i][0], "y":boxes[i][1], "width":width, "height":height})
-            val2.append((maxObjId, maxImgId, model_path, names[i], assetsDir[len(os.getenv('LOCALAPPDATA')):]+'/{img_id}-{obj_id}.jpg'.format(img_id = maxImgId, obj_id = maxObjId), confs[i], box,   created_at))
+            val2.append((maxObjId, maxImgId, model_path, names[i], assetsDir+'/{img_id}-{obj_id}.jpg'.format(img_id = maxImgId, obj_id = maxObjId), confs[i], box,   created_at))
             obj = image[boxes[i][1]:boxes[i][3], boxes[i][0]:boxes[i][2]]
             cv2.imwrite(assetsDir+'/{img_id}-{obj_id}.jpg'.format(img_id = maxImgId, obj_id = maxObjId), obj)
             maxObjId += 1
