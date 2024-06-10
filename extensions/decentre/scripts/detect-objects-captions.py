@@ -150,23 +150,8 @@ def multi_img_detection(dm = "yolov3u.pt", progress=gr.Progress()):
                 maxImgId += 1        
 
         totalDetDur = endTimes[-1] - start
-        # with open(os.getenv('LOCALAPPDATA')+"/Decentre/decentre_log.txt", "a") as myfile:
-        #     myfile.write("Number of Images: {} \n".format(len(added_imgs)))
-        #     for i in range(0,len(added_imgs)):
-        #          myfile.write("Image {index} location: {url} \n".format(index = i+1, url = added_imgs[i])) 
-        #          for j in range (0,3):
-        #              myfile.write("{process} Duration: {dur}s\n".format(process = processes[j], dur = processDurations[i*3+j]))
-        #     totalDur = endTimes[-1] - start
-        #     myfile.write("Total Duration: {dur}s \n".format(dur = totalDur))
-        #     myfile.close()         
-                
-        # addedImgIndex = 0
-        # imgclicked = -1
-        # added_imgs = []              
-        # processing = False        
-        #return [None for i in range(0, 48)] + [None, "Detection Done", "Captions Done"]
+
         return "Detection Done"
-    #return [None for i in range(0, 48)] + [None, "Error", "Add Images first"]
     return "Error"
 
 def multi_img_caption(cm = "llava-1.5-7b-hf", progress=gr.Progress()):
@@ -198,7 +183,7 @@ def multi_img_caption(cm = "llava-1.5-7b-hf", progress=gr.Progress()):
                             break
                 maxImgId += 1         
 
-        with open(os.getenv('LOCALAPPDATA')+"/Decentre/decentre_log.txt", "a") as myfile:
+        with open("C:/decentre/appdata/decentre_log.txt", "a") as myfile:
             myfile.write("Number of Images: {} \n".format(len(added_imgs)))
             for i in range(0,len(added_imgs)):
                  myfile.write("Image {index} location: {url} \n".format(index = i+1, url = added_imgs[i])) 
@@ -246,7 +231,7 @@ def cap_detection(cm = "llava-1.5-7b-hf", progress=gr.Progress()):
                      processDurations.append(time.time() - endTimes[-1])
                      endTimes.append(time.time()) 
                      break
-        with open(os.getenv('LOCALAPPDATA')+"/Decentre/decentre_log.txt", "a") as myfile:
+        with open("C:/decentre/appdata/decentre_log.txt", "a") as myfile:
             #myfile.write("Number of Images: {} \n".format(1))
             #myfile.write("Image {index} location: {url} \n".format(index = 1, url = added_imgs[imgclicked])) 
             for j in range (0,2):
@@ -277,7 +262,7 @@ def img_detection(dm = "yolov3u.pt", progress=gr.Progress()):
                      endTimes.append(time.time()) 
                      break
 
-        with open(os.getenv('LOCALAPPDATA')+"/Decentre/decentre_log.txt", "a") as myfile:
+        with open("C:/decentre/appdata/decentre_log.txt", "a") as myfile:
             myfile.write("Number of Images: {} \n".format(1))
             myfile.write("Image {index} location: {url} \n".format(index = 1, url = added_imgs[imgclicked])) 
             for j in range (0,1):
@@ -304,7 +289,7 @@ def update_images(image_directory = "", progress=gr.Progress()):
             imgclicked = -1
             added_imgs = []
             imgs = []
-            importedImagesFolder = os.getenv('LOCALAPPDATA')+"/Decentre/imported_images"
+            importedImagesFolder = "C:/decentre/appdata/imported_images"
             importedImagesFolder = importedImagesFolder + "/" + datetime.now().strftime('%Y-%m-%d %H-%M-%S')    
             os.makedirs(importedImagesFolder) 
             for image_file in progress.tqdm(image_files, desc="Processing..."):
@@ -483,7 +468,7 @@ def import_from_url(url, progress=gr.Progress()):
     #imgall=soup.find_all('img')
 
 
-    downloadDir = os.getenv('LOCALAPPDATA')+"/Decentre/imported_images"
+    downloadDir = "C:/decentre/appdata/imported_images"
 
     downloadDir = downloadDir + "/" + datetime.now().strftime('%Y-%m-%d %H-%M-%S')    
     os.makedirs(downloadDir)    
@@ -610,15 +595,15 @@ def on_ui_tabs():
   confl = float(file.readline()[22:])
   capLen = int(file.readline()[20:])
   
-  importedImagesFolder = os.getenv('LOCALAPPDATA')+"/Decentre/imported_images"
+  importedImagesFolder = "C:/decentre/appdata/imported_images"
   isExist = os.path.exists(importedImagesFolder)
   if not isExist:
     # Create a new directory because it does not exist
     os.makedirs(importedImagesFolder)
 
 
-  sqlFile = os.getenv('LOCALAPPDATA')+"/Decentre/decentre.sql"
-  dbFile = os.getenv('LOCALAPPDATA')+"/Decentre/decentre.db"
+  sqlFile = "C:/decentre/appdata/decentre.sql"
+  dbFile = "C:/decentre/appdata/decentre.db"
   sql_script = ""  
 
   if(not isSQLite3(dbFile)):

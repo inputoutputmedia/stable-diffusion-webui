@@ -154,7 +154,7 @@ currentDir = str(Path(os.getcwd()).absolute())
 #     password=lines[4].split('=')[1],
 #     database=lines[5].split('=')[1])
 
-assetsDir = os.getenv('LOCALAPPDATA')+"/Decentre/assets"
+assetsDir = "C:/decentre/appdata/assets"
 
 isExist = os.path.exists(assetsDir)
 if not isExist:
@@ -174,7 +174,7 @@ capLen = int(file.readline()[20:])
 
 file.close()
 
-dbFile = os.getenv('LOCALAPPDATA')+"/Decentre/decentre.db"
+dbFile = "C:/decentre/appdata/decentre.db"
 db = sqlite3.connect(dbFile)
 mycursor = db.cursor()
 
