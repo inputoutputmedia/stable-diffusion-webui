@@ -579,9 +579,9 @@ db = None
 def on_ui_tabs():
   subprocess.call(['pip', 'install', '-r', 'extensions/decentre/requirements_for_decentre.txt'])
   subprocess.Popen(["python", "extensions/decentre/scripts/dowload_cap_models.pyt",])
-  YOLO("yolov3u.pt")
-  YOLO("yolov5x6u.pt")
-  YOLO("yolov8x.pt")
+  YOLO("C:/decentre/appdata"+"/models/detection/"+"yolov3u.pt")
+  YOLO("C:/decentre/appdata"+"/models/detection/"+"yolov5x6u.pt")
+  YOLO("C:/decentre/appdata"+"/models/detection/"+"yolov8x.pt")
 
   global mycursor
   global db

@@ -58,9 +58,9 @@ def generate_image_caption2(image_path_or_url: str, model_id: str) -> List[str]:
         question = "What is your assessment for this image?"
         prompt = f"A chat between a curious human and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the human's questions.###Human: <image>\n{question}###Assistant:"
         raw_image = load_image(image_path_or_url)
-        processor = AutoProcessor.from_pretrained(model_id)
+        processor = AutoProcessor.from_pretrained(model_id, cache_dir = "C:/decentre/appdata"+"/models/caption")
         quantization_config = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4",bnb_4bit_compute_dtype=torch.float16)
-        model = VipLlavaForConditionalGeneration.from_pretrained(model_id, low_cpu_mem_usage=True, quantization_config=quantization_config)
+        model = VipLlavaForConditionalGeneration.from_pretrained(model_id, cache_dir = "C:/decentre/appdata"+"/models/caption", low_cpu_mem_usage=True, quantization_config=quantization_config)
         device = "cuda" if torch.cuda.is_available() else "cpu"
 
         inputs = processor(prompt, raw_image, return_tensors='pt').to(device, torch.float16)
@@ -82,9 +82,9 @@ def generate_image_caption2(image_path_or_url: str, model_id: str) -> List[str]:
 def generate_image_caption1(image_path_or_url: str, model_id: str) -> List[str]:
     try:
         raw_image = load_image(image_path_or_url)
-        processor = LlavaNextProcessor.from_pretrained(model_id)
+        processor = LlavaNextProcessor.from_pretrained(model_id, cache_dir = "C:/decentre/appdata"+"/models/caption")
         quantization_config = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4",bnb_4bit_compute_dtype=torch.float16)
-        model = LlavaNextForConditionalGeneration.from_pretrained(model_id, low_cpu_mem_usage=True, quantization_config=quantization_config)
+        model = LlavaNextForConditionalGeneration.from_pretrained(model_id, cache_dir = "C:/decentre/appdata"+"/models/caption", low_cpu_mem_usage=True, quantization_config=quantization_config)
         device = "cuda" if torch.cuda.is_available() else "cpu"
 
         prompt = "[INST] <image>\nWhat is your assessment for this image? [/INST]"
@@ -111,8 +111,8 @@ def generate_image_caption0(image_path_or_url: str, model_id: str) -> List[str]:
         raw_image = load_image(image_path_or_url)
         # specify how to quantize the model
         quantization_config = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4",bnb_4bit_compute_dtype=torch.float16)
-        model = LlavaForConditionalGeneration.from_pretrained(model_id, low_cpu_mem_usage=True, quantization_config=quantization_config)
-        processor = AutoProcessor.from_pretrained(model_id)
+        model = LlavaForConditionalGeneration.from_pretrained(model_id, cache_dir = "C:/decentre/appdata"+"/models/caption", low_cpu_mem_usage=True, quantization_config=quantization_config)
+        processor = AutoProcessor.from_pretrained(model_id, cache_dir = "C:/decentre/appdata"+"/models/caption")
 
         prompt = "USER: <image>\nWhat is your assessment for this image?\nASSISTANT:"
         inputs = processor(prompt, raw_image, return_tensors='pt').to("cuda" if torch.cuda.is_available() else "cpu", torch.float16)
@@ -245,7 +245,7 @@ def detect_image(image_path_or_url: str, isCaption: str, model_path: str):
     #     image = np.asarray(bytearray(resp.read()), dtype="uint8")
     #     image = cv2.imdecode(image, cv2.IMREAD_COLOR)
     # else:
-        model = YOLO(model_path)
+        model = YOLO("C:/decentre/appdata"+"/models/detection/"+model_path)
         image = cv2.imread(image_path_or_url)
         boxes,names, confs = predict_and_detect(model, image, classes=[], conf=confl)
         # image_id, image_path, prompt_text, generation_time, user_id
