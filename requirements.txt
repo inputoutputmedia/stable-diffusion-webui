@@ -1,7 +1,7 @@
 GitPython
 Pillow
 accelerate
-
+diskcache
 blendmodes
 clean-fid
 einops
@@ -15,6 +15,7 @@ lark
 numpy
 omegaconf
 open-clip-torch
+setuptools
 
 piexif
 psutil
