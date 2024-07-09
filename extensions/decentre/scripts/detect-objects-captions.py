@@ -163,7 +163,7 @@ def multi_img_caption(cm = "llava-1.5-7b-hf", progress=gr.Progress()):
     if len(added_imgs) > 0:
         sql1 = "SELECT IFNULL(MAX(image_id), 0) FROM image_table"
         mycursor.execute(sql1)
-        maxImgId = mycursor.fetchone()[0] + 1        
+        maxImgId = mycursor.fetchone()[0] + 1 - len(added_imgs)       
         start = time.time()
         processDurations = []
         endTimes = [start]

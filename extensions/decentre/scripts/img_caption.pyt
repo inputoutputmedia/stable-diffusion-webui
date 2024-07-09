@@ -182,7 +182,7 @@ dbFile = "C:/decentre/appdata/decentre.db"
 db = sqlite3.connect(dbFile)
 mycursor = db.cursor()
 
-def detect_image(image_path_or_url: str, isCaption: str, model_path: str):
+def detect_cap(image_path_or_url: str, isCaption: str, model_path: str):
     sql1 = "SELECT IFNULL(MAX(image_id), 0) FROM image_table"
     sql5 = "SELECT IFNULL(MAX(caption_id), 0) FROM captions_table"
     sql6 = "INSERT INTO captions_table (caption_id, image_id, text, model_used, created_at) VALUES (?, ?, ?, ?, ?)"
@@ -190,7 +190,7 @@ def detect_image(image_path_or_url: str, isCaption: str, model_path: str):
     sql8 = "INSERT INTO object_captions (object_caption_id, object_id, image_id, caption_text, model_used, created_at) VALUES (?, ?, ?, ?, ?, ?)"
 
     mycursor.execute(sql1)
-    maxImgId = mycursor.fetchone()[0] + 1
+    maxImgId = mycursor.fetchone()[0]
     mycursor.execute(sql5)
     maxCapId = mycursor.fetchone()[0] + 1
     mycursor.execute(sql7)
@@ -239,4 +239,4 @@ def detect_image(image_path_or_url: str, isCaption: str, model_path: str):
 
     db.close() 
 
-detect_image(sys.argv[1], sys.argv[2], sys.argv[3]) 
+detect_cap(sys.argv[1], sys.argv[2], sys.argv[3]) 
