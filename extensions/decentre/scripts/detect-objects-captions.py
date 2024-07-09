@@ -21,6 +21,7 @@ from datetime import datetime
 import time
 import shutil
 import sqlite3
+import gc
 
 # class DetectionScript(script.Script):
 #         def __init__(self) -> None:
@@ -598,19 +599,43 @@ def isSQLite3(filename):
 
 mycursor = None
 db = None
+downloaded_caps = False
+
+def hidden_checkbox_fn(checkbox_state):
+    global downloaded_caps
+    if checkbox_state and downloaded_caps:
+        op = subprocess.Popen(["python", "extensions/decentre/scripts/re_download_cap_models.pyt",], stdout=subprocess.PIPE, universal_newlines=True)
+        downloaded_caps = False
+        iter_line = iter(op.stdout.readline, "")     
+        while(True):
+          stdout_line = next(iter_line)
+          if stdout_line.startswith("caps redownloaded"):
+            downloaded_caps = True
+            break
+
+    return False
+
+def hidden_checkdownload_fn():
+  global downloaded_caps
+  
+  if not downloaded_caps:
+    op = subprocess.Popen(["python", "extensions/decentre/scripts/dowload_cap_models.pyt",], stdout=subprocess.PIPE, universal_newlines=True)
+
+    iter_line = iter(op.stdout.readline, "")     
+    while(True):
+      stdout_line = next(iter_line)
+      if stdout_line.startswith("caps downloaded"):
+          downloaded_caps = True
+          return  
+  return
      
 def on_ui_tabs():
   subprocess.call(['pip', 'install', '-r', 'extensions/decentre/requirements_for_decentre.txt'])
-  subprocess.Popen(["python", "extensions/decentre/scripts/dowload_cap_models.pyt",])
   detectionFolder = "C:/decentre/appdata/models/detection"
   isExist = os.path.exists(detectionFolder)
   if not isExist:
     # Create a new directory because it does not exist
      os.makedirs(detectionFolder)
-
-  YOLO("C:/decentre/appdata"+"/models/detection/"+"yolov3u.pt")
-  YOLO("C:/decentre/appdata"+"/models/detection/"+"yolov5x6u.pt")
-  YOLO("C:/decentre/appdata"+"/models/detection/"+"yolov8x.pt")
 
   global mycursor
   global db
@@ -652,6 +677,8 @@ def on_ui_tabs():
   with gr.Blocks(analytics_enabled=False) as Decentre:
     with gr.Column(elem_id = "columnMain"):
       gr.Image("extensions/decentre/decenter_studio.jpeg", height = 57, width = 160, show_label = False, container = False, show_download_button = False)
+      hidden_downloadBtn = gr.Button(visible=False, elem_id="dldbtn")
+      hidden_checkbox = gr.Checkbox(visible=False)
       with gr.Row():
         with gr.Column(elem_classes = "panel3"):
           with gr.Row(elem_classes = "panel1", min_width=550):
@@ -918,6 +945,8 @@ def on_ui_tabs():
       capsv.change(label_rest, outputs = [capsv])
       importFDone.change(label_rest, outputs = [importFDone])
       importUDone.change(label_rest, outputs = [importUDone])
+      hidden_downloadBtn.click(hidden_checkdownload_fn, None, None).then(None, None, hidden_checkbox, _js = "dld_click")
+      hidden_checkbox.change(hidden_checkbox_fn, [hidden_checkbox], [hidden_checkbox])
       for i in range(0, 48):
          added_imgs[i].select(img_clicked, inputs = [gr.Number(value=i, precision=0, visible=False)], outputs = [image])       
   return [(Decentre, "Decentre", "Decentre")]

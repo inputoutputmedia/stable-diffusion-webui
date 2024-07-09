@@ -7,23 +7,38 @@ function gradioApp() {
             return document.getElementById(id);
         };
     }
+
     return elem.shadowRoot ? elem.shadowRoot : elem;
 }
 
-
+var decentre = false;
 
 /**
  * Get the currently selected top-level UI tab button (e.g. the button that says "Extras").
  */
 function get_uiCurrentTab() {
-    return gradioApp().querySelector('#tabs > .tab-nav > button.selected');
+
+    var elem = gradioApp().querySelector('#tabs > .tab-nav > button.selected');
+    var txt = elem.innerText;
+    if (txt == "Decentre") {
+        decentre = true;
+    }
+    else {
+        decentre = false;
+    }
+
+    setTimeout(dld_click1, 500);
+
+    return elem;
 }
 
 /**
  * Get the first currently visible top-level UI tab content (e.g. the div hosting the "txt2img" UI).
  */
 function get_uiCurrentTabContent() {
+
     return gradioApp().querySelector('#tabs > .tabitem[id^=tab_]:not([style*="display: none"])');
+    
 }
 
 var uiUpdateCallbacks = [];
@@ -213,6 +228,26 @@ function AddToDataBase(){
 function AddMultiToDataBase(){
     document.getElementById("multiDetect").click();
        document.getElementById("multiCaption").click();
+}
+
+function dld_click1() {
+    document.getElementById("dldbtn").click();
+}
+
+var clkdld = false;
+
+function dld_click() {
+    if(decentre) {
+     if(!clkdld && confirm('Do you want to re download the caption models?') == true) {
+        clkdld = true;
+        return true;
+      } else {
+        clkdld = true;
+        return false;
+      }
+    }
+    clkdld = false;
+    return false;
 }
 
 function disable_buttons(){
