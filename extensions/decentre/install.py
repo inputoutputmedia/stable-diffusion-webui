@@ -2,8 +2,8 @@ import launch
 
 # # TODO: add pip dependency if need extra module only on extension
 
-# if not launch.is_installed("opencv-python"):
-#     launch.run_pip("install opencv-python", "requirements for objectsAndCaptionsDetection")
+if not launch.is_installed("opencv-python"):
+    launch.run_pip("install opencv-python", "requirements for objectsAndCaptionsDetection")
 
 # if not launch.is_installed("huggingface_hub"):
 #     launch.run_pip("install huggingface_hub", "requirements for objectsAndCaptionsDetection")
@@ -14,8 +14,8 @@ import launch
 # if not launch.is_installed("transformers"):
 #     launch.run_pip("install transformers==4.39.2", "requirements for objectsAndCaptionsDetection")
 
-# if not launch.is_installed("numpy"):
-#     launch.run_pip("install numpy", "requirements for objectsAndCaptionsDetection")
+if not launch.is_installed("numpy"):
+    launch.run_pip("install numpy", "requirements for objectsAndCaptionsDetection")
 
 if not launch.is_installed("ultralytics"):
     launch.run_pip("install ultralytics", "requirements for objectsAndCaptionsDetection")

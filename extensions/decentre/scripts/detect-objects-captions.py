@@ -21,6 +21,8 @@ from datetime import datetime
 import time
 import shutil
 import sqlite3
+import cv2
+import numpy as np
 import gc
 
 # class DetectionScript(script.Script):
@@ -278,6 +280,37 @@ def img_detection(dm = "yolov3u.pt", progress=gr.Progress()):
     
     return "Error"
 
+def add_all(progress=gr.Progress()):
+   global imgs
+   global imgIndex
+   global addedImgIndex
+   global loaded_imgs
+   diff = 24 - addedImgIndex
+   for i in progress.tqdm(range(0, diff), desc="Adding..."):
+       added_imgs.append(imgs[i])
+       loaded_added_imgs.append(loaded_imgs[i])
+       addedImgIndex += 1
+
+   if len(imgs) <= diff:
+      imgIndex = 0
+      imgs = []
+      loaded_imgs = []
+   else:
+      imgIndex = 0
+      imgs = imgs[diff:]
+      loaded_imgs = loaded_imgs[diff:]
+
+   if len(imgs) > 0:
+       if len(imgs) < 24:
+            return [loaded_imgs[imgIndex]] + [loaded_imgs[i] for i in range(0, len(imgs))] + [None for i in range(len(imgs), 24)] + [loaded_added_imgs[i] for i in range(0, len(added_imgs))] + [None for i in range(len(added_imgs), 24)]
+       else:
+           return [loaded_imgs[imgIndex]] + [loaded_imgs[i] for i in range(0, 24)] + [loaded_added_imgs[i] for i in range(0, 24)]
+   else:
+       return [None] + [None for i in range(0, 24)] + [loaded_added_imgs[i] for i in range(0, len(added_imgs))] + [None for i in range(len(added_imgs), 24)]
+
+         
+      
+
 def update_images(image_directory = "", progress=gr.Progress()):
 
         if os.path.exists(image_directory):       
@@ -312,13 +345,12 @@ def update_images(image_directory = "", progress=gr.Progress()):
                     return [loaded_imgs[0]] + [loaded_imgs[i] for i in range(0, 24)] + [None for i in range(24, 48)] + ["Import Done"]
         return [None] + [None for i in range(0, 48)] + ["Import Done"]
 
-def load_image(image_path_or_url: str) -> Image.Image:
+def load_image(image_path_or_url: str):
     image = None
-    if image_path_or_url.startswith(('http://', 'https://')):
-        response = requests.get(image_path_or_url)
-        image = Image.open(BytesIO(response.content))
-    elif image_path_or_url != "":
-        image = Image.open(image_path_or_url)
+    if image_path_or_url != "":
+        #image = cv2.imread(image_path_or_url) #Image.open(image_path_or_url)
+        #return cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        return image_path_or_url
     return image 
 
 imgs = []
@@ -367,7 +399,7 @@ def add_image():
         #imgclicked = addedImgIndex
         addedImgIndex += 1
         imgs = imgs[0:imgIndex]+imgs[imgIndex+1:len(imgs)]
-        loaded_imgs = loaded_imgs[0:imgIndex]+loaded_imgs[imgIndex+1:len(imgs)]
+        loaded_imgs = loaded_imgs[0:imgIndex]+loaded_imgs[imgIndex+1:len(loaded_imgs)]
         if imgIndex > 0:
             imgIndex = imgIndex - 1
         if len(imgs) < 24:
@@ -405,7 +437,7 @@ def remove_image():
           return [loaded_imgs[imgIndex]] + [loaded_imgs[i] for i in range(0, 24)] + [loaded_added_imgs[i] for i in range(0, len(added_imgs))] + [None for i in range(len(added_imgs), 24)]    
    elif len(imgs) > 0:
       imgs = imgs[0:imgIndex]+imgs[imgIndex+1:len(imgs)]
-      loaded_imgs = loaded_imgs[0:imgIndex]+loaded_imgs[imgIndex+1:len(imgs)]
+      loaded_imgs = loaded_imgs[0:imgIndex]+loaded_imgs[imgIndex+1:len(loaded_imgs)]
       if imgIndex > 0:
             imgIndex = imgIndex - 1
       if len(imgs) < 24:
@@ -801,8 +833,8 @@ def on_ui_tabs():
             multiDetect = gr. Button(value = "Multi Image Detect Objects", variant="primary", scale = 1, size="sm", visible = False, elem_id="multiDetect")
             caption = gr. Button(value = "Detect Captions", variant="primary", scale = 1, size="sm", visible = False, elem_id="caption")
             detect = gr. Button(value = "Detect Objects", variant="primary", scale = 1, size="sm", visible = False, elem_id="detect")
-            addAI = gr. Button(value = "Add all", variant="primary", scale = 1, size="sm", elem_id="addAIToDB")
-            add = gr.Button(value="Add Selected", variant="primary", scale = 1, size="sm", elem_id="addToDB")                                              
+            addAI = gr. Button(value = "Add all Images", variant="primary", scale = 1, size="sm", elem_id="addAIToDB")
+            processImgs = gr.Button(value="Process Images", variant="primary", scale = 1, size="sm", elem_id="addToDB")                                              
         with gr.Column(elem_classes = "panel4"):
           with gr.Row():
                 with gr.Row(scale = 1):
@@ -927,8 +959,8 @@ def on_ui_tabs():
       #multiDetect.click(multi_img_detection, inputs=[sdm], outputs=[label1])
       #add.click(no_fn, None, None, _js = "disable_buttons").then(no_fn, None, None, _js = "AddToDataBase")
       #addAI.click(no_fn, None, None, _js = "disable_buttons").then(no_fn, None, None, _js = "AddMultiToDataBase")
-      add.click(no_fn, None, None, _js = "disable_buttons").then(img_detection,  inputs=[sdm], outputs=[label1]).then(cap_detection,  inputs=[scm],  outputs=[label2]).then(insert_into_all_table, None, None).then(None, None, None, _js = "enabled_buttons")
-      addAI.click(no_fn, None, None, _js = "disable_buttons").then(multi_img_detection, inputs=[sdm], outputs=[label1]).then(multi_img_caption, inputs=[scm], outputs=[label2]).then(insert_multi_into_all_table_and_reset_images, None, outputs = [image] + [added_imgs[i] for i in range(24, 48)]).then(None, None, None, _js = "enabled_buttons")
+      addAI.click(no_fn, None, None, _js = "disable_buttons").then(add_all,  inputs=None, outputs=[image]+[added_imgs[i] for i in range(0, 48)]).then(None, None, None, _js = "enabled_buttons")
+      processImgs.click(no_fn, None, None, _js = "disable_buttons").then(multi_img_detection, inputs=[sdm], outputs=[label1]).then(multi_img_caption, inputs=[scm], outputs=[label2]).then(insert_multi_into_all_table_and_reset_images, None, outputs = [image] + [added_imgs[i] for i in range(24, 48)]).then(None, None, None, _js = "enabled_buttons")
       label1.change(label_rest, outputs = [label1])
       label2.change(label_rest, outputs = [label2])  
       importF.click(no_fn, None, None, _js = "disable_buttons").then(update_images, inputs=[text1], outputs = [image] + [added_imgs[i] for i in range(0, 48)] +  [importFDone]).then(None, None, None, _js = "enabled_buttons")
