@@ -37,7 +37,7 @@ def generate_image_caption2(image_path_or_url: str, model_id: str) -> List[str]:
         raw_image = load_image(image_path_or_url)
         processor = AutoProcessor.from_pretrained(model_id, local_files_only=True, cache_dir = "C:/decentre/appdata"+"/models/caption")
         quantization_config = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4",bnb_4bit_compute_dtype=torch.float16)
-        model = VipLlavaForConditionalGeneration.from_pretrained(model_id, local_files_only=True, cache_dir = "C:/decentre/appdata"+"/models/caption", low_cpu_mem_usage=True, quantization_config=quantization_config)
+        model = VipLlavaForConditionalGeneration.from_pretrained(model_id, local_files_only=True, cache_dir = "C:/decentre/appdata"+"/models/caption", low_cpu_mem_usage=True, quantization_config=quantization_config, attn_implementation="flash_attention_2")
         device = "cuda" if torch.cuda.is_available() else "cpu"
 
         inputs = processor(prompt, raw_image, return_tensors='pt').to(device, torch.float16)
@@ -70,7 +70,7 @@ def generate_image_caption1(image_path_or_url: str, model_id: str) -> List[str]:
         raw_image = load_image(image_path_or_url)
         processor = LlavaNextProcessor.from_pretrained(model_id, local_files_only=True, cache_dir = "C:/decentre/appdata"+"/models/caption")
         quantization_config = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4",bnb_4bit_compute_dtype=torch.float16)
-        model = LlavaNextForConditionalGeneration.from_pretrained(model_id, local_files_only=True, cache_dir = "C:/decentre/appdata"+"/models/caption", low_cpu_mem_usage=True, quantization_config=quantization_config)
+        model = LlavaNextForConditionalGeneration.from_pretrained(model_id, local_files_only=True, cache_dir = "C:/decentre/appdata"+"/models/caption", low_cpu_mem_usage=True, quantization_config=quantization_config, attn_implementation="flash_attention_2")
         device = "cuda" if torch.cuda.is_available() else "cpu"
 
         prompt = "[INST] <image>\nWhat is your assessment for this image? [/INST]"
@@ -106,7 +106,7 @@ def generate_image_caption0(image_path_or_url: str, model_id: str) -> List[str]:
         raw_image = load_image(image_path_or_url)
         # specify how to quantize the model
         quantization_config = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4",bnb_4bit_compute_dtype=torch.float16)
-        model = LlavaForConditionalGeneration.from_pretrained(model_id, local_files_only=True, cache_dir = "C:/decentre/appdata"+"/models/caption", low_cpu_mem_usage=True, quantization_config=quantization_config)
+        model = LlavaForConditionalGeneration.from_pretrained(model_id, local_files_only=True, cache_dir = "C:/decentre/appdata"+"/models/caption", low_cpu_mem_usage=True, quantization_config=quantization_config, attn_implementation="flash_attention_2")
         processor = AutoProcessor.from_pretrained(model_id, local_files_only=True, cache_dir = "C:/decentre/appdata"+"/models/caption")
 
         prompt = "USER: <image>\nWhat is your assessment for this image?\nASSISTANT:"

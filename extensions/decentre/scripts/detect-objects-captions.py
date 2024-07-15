@@ -833,7 +833,7 @@ def on_ui_tabs():
             multiDetect = gr. Button(value = "Multi Image Detect Objects", variant="primary", scale = 1, size="sm", visible = False, elem_id="multiDetect")
             caption = gr. Button(value = "Detect Captions", variant="primary", scale = 1, size="sm", visible = False, elem_id="caption")
             detect = gr. Button(value = "Detect Objects", variant="primary", scale = 1, size="sm", visible = False, elem_id="detect")
-            addAI = gr. Button(value = "Add all Images", variant="primary", scale = 1, size="sm", elem_id="addAIToDB")
+            addAI = gr. Button(value = "Add All Images", variant="primary", scale = 1, size="sm", elem_id="addAIToDB")
             processImgs = gr.Button(value="Process Images", variant="primary", scale = 1, size="sm", elem_id="addToDB")                                              
         with gr.Column(elem_classes = "panel4"):
           with gr.Row():
