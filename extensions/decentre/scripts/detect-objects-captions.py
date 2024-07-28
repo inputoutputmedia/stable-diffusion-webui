@@ -213,8 +213,8 @@ def reset_images():
     addedImgIndex = 0
     imgclicked = -1
     if len(imgs) > 0:
-        return [loaded_imgs[imgIndex]] + [None for i in range(0, 24)]
-    return [None] + [None for i in range(0, 24)]
+        return [loaded_imgs[imgIndex]] + [None for i in range(0, 48)]
+    return [None] + [None for i in range(0, 48)]
 
 def cap_detection(cm = "llava-1.5-7b-hf", progress=gr.Progress()):
     global totalDetDur
@@ -285,8 +285,8 @@ def add_all(progress=gr.Progress()):
    global imgIndex
    global addedImgIndex
    global loaded_imgs
-   diff = 24 - addedImgIndex
-   for i in progress.tqdm(range(0, diff), desc="Adding..."):
+   diff = 48 - addedImgIndex
+   for i in progress.tqdm(range(0, min(diff, len(imgs))), desc="Adding..."):
        added_imgs.append(imgs[i])
        loaded_added_imgs.append(loaded_imgs[i])
        addedImgIndex += 1
@@ -302,11 +302,11 @@ def add_all(progress=gr.Progress()):
 
    if len(imgs) > 0:
        if len(imgs) < 24:
-            return [loaded_imgs[imgIndex]] + [loaded_imgs[i] for i in range(0, len(imgs))] + [None for i in range(len(imgs), 24)] + [loaded_added_imgs[i] for i in range(0, len(added_imgs))] + [None for i in range(len(added_imgs), 24)]
+            return [loaded_imgs[imgIndex]] + [loaded_imgs[i] for i in range(0, len(imgs))] + [None for i in range(len(imgs), 24)] + [loaded_added_imgs[i] for i in range(0, len(added_imgs))] + [None for i in range(len(added_imgs), 48)]
        else:
-           return [loaded_imgs[imgIndex]] + [loaded_imgs[i] for i in range(0, 24)] + [loaded_added_imgs[i] for i in range(0, 24)]
+           return [loaded_imgs[imgIndex]] + [loaded_imgs[i] for i in range(0, 24)] + [loaded_added_imgs[i] for i in range(0, 48)]
    else:
-       return [None] + [None for i in range(0, 24)] + [loaded_added_imgs[i] for i in range(0, len(added_imgs))] + [None for i in range(len(added_imgs), 24)]
+       return [None] + [None for i in range(0, 24)] + [loaded_added_imgs[i] for i in range(0, len(added_imgs))] + [None for i in range(len(added_imgs), 48)]
 
          
       
@@ -340,10 +340,39 @@ def update_images(image_directory = "", progress=gr.Progress()):
                 for i in range(0, len(imgs)):
                    loaded_imgs.append(load_image(imgs[i]))
                 if len(imgs) < 24:
-                    return [loaded_imgs[0]] + [loaded_imgs[i] for i in range(0, len(imgs))] + [None for i in range(len(imgs), 48)] + ["Import Done"]
+                    return [loaded_imgs[0]] + [loaded_imgs[i] for i in range(0, len(imgs))] + [None for i in range(len(imgs), 72)] + ["Import Done"]
                 else:        
-                    return [loaded_imgs[0]] + [loaded_imgs[i] for i in range(0, 24)] + [None for i in range(24, 48)] + ["Import Done"]
-        return [None] + [None for i in range(0, 48)] + ["Import Done"]
+                    return [loaded_imgs[0]] + [loaded_imgs[i] for i in range(0, 24)] + [None for i in range(24, 72)] + ["Import Done"]
+        return [None] + [None for i in range(0, 72)] + ["Import Done"]
+
+def process_images(image_directory = "", progress=gr.Progress()):
+        if os.path.exists(image_directory):       
+            image_files = [f for f in os.listdir(image_directory) if f.endswith((".png", ".jpg", ".jpeg"))]
+            global imgs
+            global imgIndex
+            global addedImgIndex
+            global added_imgs
+            global imgclicked
+            global loaded_added_imgs
+            global loaded_imgs
+            imgIndex = 0
+            addedImgIndex = 0
+            imgclicked = -1
+            added_imgs = []
+            imgs = []
+            loaded_imgs = []
+            loaded_added_imgs = [] 
+            importedImagesFolder = "C:/decentre/appdata/imported_images"
+            importedImagesFolder = importedImagesFolder + "/" + datetime.now().strftime('%Y-%m-%d %H-%M-%S')    
+            os.makedirs(importedImagesFolder) 
+            for image_file in progress.tqdm(image_files, desc="Processing..."):
+                shutil.copyfile(os.path.join(image_directory, image_file), os.path.join(importedImagesFolder, image_file))
+                added_imgs.append(os.path.join(importedImagesFolder, image_file))
+
+        return [None] + [None for i in range(0, 72)]                
+
+
+   
 
 def load_image(image_path_or_url: str):
     image = None
@@ -392,8 +421,8 @@ def add_image():
     global imgs
     global loaded_imgs
     if imgclicked != -1:
-       return [loaded_added_imgs[imgclicked]] + [loaded_imgs[i] for i in range(0, min(len(imgs), 24))] + [None for i in range(min(len(imgs), 24), 24)] + [loaded_added_imgs[i] for i in range(0, len(added_imgs))] + [None for i in range(len(added_imgs), 24)] 
-    elif len(imgs) > 0 and addedImgIndex < 24:
+       return [loaded_added_imgs[imgclicked]] + [loaded_imgs[i] for i in range(0, min(len(imgs), 24))] + [None for i in range(min(len(imgs), 24), 24)] + [loaded_added_imgs[i] for i in range(0, len(added_imgs))] + [None for i in range(len(added_imgs), 48)] 
+    elif len(imgs) > 0 and addedImgIndex < 48:
         added_imgs.append(imgs[imgIndex])
         loaded_added_imgs.append(loaded_imgs[imgIndex])
         #imgclicked = addedImgIndex
@@ -404,17 +433,17 @@ def add_image():
             imgIndex = imgIndex - 1
         if len(imgs) < 24:
            if len(imgs) > 0:
-               return [loaded_imgs[imgIndex]] + [loaded_imgs[i] for i in range(0, len(imgs))] + [None for i in range(len(imgs), 24)] + [loaded_added_imgs[i] for i in range(0, len(added_imgs))] + [None for i in range(len(added_imgs), 24)]
-           return [None] + [None for i in range(0, 24)] + [loaded_added_imgs[i] for i in range(0, len(added_imgs))] + [None for i in range(len(added_imgs), 24)]
+               return [loaded_imgs[imgIndex]] + [loaded_imgs[i] for i in range(0, len(imgs))] + [None for i in range(len(imgs), 24)] + [loaded_added_imgs[i] for i in range(0, len(added_imgs))] + [None for i in range(len(added_imgs), 48)]
+           return [None] + [None for i in range(0, 24)] + [loaded_added_imgs[i] for i in range(0, len(added_imgs))] + [None for i in range(len(added_imgs), 48)]
         else:
-           return [loaded_imgs[imgIndex]] + [loaded_imgs[i] for i in range(0, 24)] + [loaded_added_imgs[i] for i in range(0, len(added_imgs))] + [None for i in range(len(added_imgs), 24)]
+           return [loaded_imgs[imgIndex]] + [loaded_imgs[i] for i in range(0, 24)] + [loaded_added_imgs[i] for i in range(0, len(added_imgs))] + [None for i in range(len(added_imgs), 48)]
     elif len(imgs) > 0:
         if len(imgs) < 24:
-            return [loaded_imgs[imgIndex]] + [loaded_imgs[i] for i in range(0, len(imgs))] + [None for i in range(len(imgs), 24)] + [loaded_added_imgs[i] for i in range(0, 24)]
+            return [loaded_imgs[imgIndex]] + [loaded_imgs[i] for i in range(0, len(imgs))] + [None for i in range(len(imgs), 24)] + [loaded_added_imgs[i] for i in range(0, 48)]
         else:
-           return [loaded_imgs[imgIndex]] + [loaded_imgs[i] for i in range(0, 24)] + [loaded_added_imgs[i] for i in range(0, 24)]
+           return [loaded_imgs[imgIndex]] + [loaded_imgs[i] for i in range(0, 24)] + [loaded_added_imgs[i] for i in range(0, 48)]
     else:
-        return [None] + [None for i in range(0, 24)] + [loaded_added_imgs[i] for i in range(0, len(added_imgs))] + [None for i in range(len(added_imgs), 24)]
+        return [None] + [None for i in range(0, 24)] + [loaded_added_imgs[i] for i in range(0, len(added_imgs))] + [None for i in range(len(added_imgs), 48)]
 
 def remove_image():
    global addedImgIndex
@@ -431,10 +460,10 @@ def remove_image():
        imgclicked = -1
        if len(imgs) < 24:
            if len(imgs) > 0:
-               return [loaded_imgs[imgIndex]] + [loaded_imgs[i] for i in range(0, len(imgs))] + [None for i in range(len(imgs), 24)] + [loaded_added_imgs[i] for i in range(0, len(added_imgs))] + [None for i in range(len(added_imgs), 24)]
-           return [None] + [None for i in range(0, 24)] + [loaded_added_imgs[i] for i in range(0, len(added_imgs))] + [None for i in range(len(added_imgs), 24)]
+               return [loaded_imgs[imgIndex]] + [loaded_imgs[i] for i in range(0, len(imgs))] + [None for i in range(len(imgs), 24)] + [loaded_added_imgs[i] for i in range(0, len(added_imgs))] + [None for i in range(len(added_imgs), 48)]
+           return [None] + [None for i in range(0, 24)] + [loaded_added_imgs[i] for i in range(0, len(added_imgs))] + [None for i in range(len(added_imgs), 48)]
        else:
-          return [loaded_imgs[imgIndex]] + [loaded_imgs[i] for i in range(0, 24)] + [loaded_added_imgs[i] for i in range(0, len(added_imgs))] + [None for i in range(len(added_imgs), 24)]    
+          return [loaded_imgs[imgIndex]] + [loaded_imgs[i] for i in range(0, 24)] + [loaded_added_imgs[i] for i in range(0, len(added_imgs))] + [None for i in range(len(added_imgs), 48)]    
    elif len(imgs) > 0:
       imgs = imgs[0:imgIndex]+imgs[imgIndex+1:len(imgs)]
       loaded_imgs = loaded_imgs[0:imgIndex]+loaded_imgs[imgIndex+1:len(loaded_imgs)]
@@ -442,12 +471,12 @@ def remove_image():
             imgIndex = imgIndex - 1
       if len(imgs) < 24:
             if len(imgs) > 0:
-                return [loaded_imgs[imgIndex]] + [loaded_imgs[i] for i in range(0, len(imgs))] + [None for i in range(len(imgs), 24)] + [loaded_added_imgs[i] for i in range(0, len(added_imgs))] + [None for i in range(len(added_imgs), 24)]
-            return [None] + [None for i in range(0, 24)] + [loaded_added_imgs[i] for i in range(0, len(added_imgs))] + [None for i in range(len(added_imgs), 24)]
+                return [loaded_imgs[imgIndex]] + [loaded_imgs[i] for i in range(0, len(imgs))] + [None for i in range(len(imgs), 24)] + [loaded_added_imgs[i] for i in range(0, len(added_imgs))] + [None for i in range(len(added_imgs), 48)]
+            return [None] + [None for i in range(0, 24)] + [loaded_added_imgs[i] for i in range(0, len(added_imgs))] + [None for i in range(len(added_imgs), 48)]
       else:
-           return [loaded_imgs[imgIndex]] + [loaded_imgs[i] for i in range(0, 24)] + [loaded_added_imgs[i] for i in range(0, len(added_imgs))] + [None for i in range(len(added_imgs), 24)]      
+           return [loaded_imgs[imgIndex]] + [loaded_imgs[i] for i in range(0, 24)] + [loaded_added_imgs[i] for i in range(0, len(added_imgs))] + [None for i in range(len(added_imgs), 48)]      
    else:
-       return [None] + [None for i in range(0, 24)] + [loaded_added_imgs[i] for i in range(0, len(added_imgs))] + [None for i in range(len(added_imgs), 24)]    
+       return [None] + [None for i in range(0, 24)] + [loaded_added_imgs[i] for i in range(0, len(added_imgs))] + [None for i in range(len(added_imgs), 48)]    
        
 def img_clicked(img_index):
    global imgclicked
@@ -611,10 +640,10 @@ def import_from_url(url, progress=gr.Progress()):
         for i in range(0, len(imgs)):
           loaded_imgs.append(load_image(imgs[i]))
         if len(imgs) < 24:
-            return [loaded_imgs[0]] + [loaded_imgs[i] for i in range(0, len(imgs))] + [None for i in range(len(imgs), 48)] + ["Import Done"]
+            return [loaded_imgs[0]] + [loaded_imgs[i] for i in range(0, len(imgs))] + [None for i in range(len(imgs), 72)] + ["Import Done"]
         else:        
-            return [loaded_imgs[0]] + [loaded_imgs[i] for i in range(0, 24)] + [None for i in range(24, 48)] + ["Import Done"]
-    return [None] + [None for i in range(0, 48)] + ["Import Done"]             
+            return [loaded_imgs[0]] + [loaded_imgs[i] for i in range(0, 24)] + [None for i in range(24, 72)] + ["Import Done"]
+    return [None] + [None for i in range(0, 72)] + ["Import Done"]             
 
 def isSQLite3(filename):
     from os.path import isfile, getsize
@@ -673,7 +702,7 @@ def on_ui_tabs():
   global db
   label1 = None
   label2 = None
-  added_imgs = [None] * 48
+  added_imgs = [None] * 72
   settingsFile = "extensions/decentre/settings.st"
 
   file = open(settingsFile, 'r')
@@ -826,7 +855,59 @@ def on_ui_tabs():
               with gr.Row(elem_classes = "panelm", elem_id = "row46"):
                 added_imgs[46] = gr.Image(height = 75, width = 75, min_width = 75, show_label = False, container = True, show_download_button = False, interactive = False)
               with gr.Row(elem_classes = "panelm", elem_id = "row47"):
-                added_imgs[47] = gr.Image(height = 75, width = 75, min_width = 75, show_label = False, container = True, show_download_button = False, interactive = False)            
+                added_imgs[47] = gr.Image(height = 75, width = 75, min_width = 75, show_label = False, container = True, show_download_button = False, interactive = False)
+            with gr.Row(min_width=550):
+              with gr.Row(elem_classes = "panelm", elem_id = "row48"):
+                added_imgs[48] = gr.Image(height = 75, width = 75, min_width = 75, show_label = False, container = True, show_download_button = False, interactive = False)
+              with gr.Row(elem_classes = "panelm", elem_id = "row49"):
+                added_imgs[49] = gr.Image(height = 75, width = 75, min_width = 75, show_label = False, container = True, show_download_button = False, interactive = False)
+              with gr.Row(elem_classes = "panelm", elem_id = "row50"):
+                added_imgs[50] = gr.Image(height = 75, width = 75, min_width = 75, show_label = False, container = True, show_download_button = False, interactive = False)
+              with gr.Row(elem_classes = "panelm", elem_id = "row51"):
+                added_imgs[51] = gr.Image(height = 75, width = 75, min_width = 75, show_label = False, container = True, show_download_button = False, interactive = False)
+              with gr.Row(elem_classes = "panelm", elem_id = "row52"):
+                added_imgs[52] = gr.Image(height = 75, width = 75, min_width = 75, show_label = False, container = True, show_download_button = False, interactive = False)
+              with gr.Row(elem_classes = "panelm", elem_id = "row53"):
+                added_imgs[53] = gr.Image(height = 75, width = 75, min_width = 75, show_label = False, container = True, show_download_button = False, interactive = False)
+            with gr.Row(min_width=550):
+              with gr.Row(elem_classes = "panelm", elem_id = "row54"):
+                added_imgs[54] = gr.Image(height = 75, width = 75, min_width = 75, show_label = False, container = True, show_download_button = False, interactive = False)
+              with gr.Row(elem_classes = "panelm", elem_id = "row55"):
+                added_imgs[55] = gr.Image(height = 75, width = 75, min_width = 75, show_label = False, container = True, show_download_button = False, interactive = False)
+              with gr.Row(elem_classes = "panelm", elem_id = "row56"):
+                added_imgs[56] = gr.Image(height = 75, width = 75, min_width = 75, show_label = False, container = True, show_download_button = False, interactive = False)
+              with gr.Row(elem_classes = "panelm", elem_id = "row57"):
+                added_imgs[57] = gr.Image(height = 75, width = 75, min_width = 75, show_label = False, container = True, show_download_button = False, interactive = False)
+              with gr.Row(elem_classes = "panelm", elem_id = "row58"):
+                added_imgs[58] = gr.Image(height = 75, width = 75, min_width = 75, show_label = False, container = True, show_download_button = False, interactive = False)
+              with gr.Row(elem_classes = "panelm", elem_id = "row59"):
+                added_imgs[59] = gr.Image(height = 75, width = 75, min_width = 75, show_label = False, container = True, show_download_button = False, interactive = False)
+            with gr.Row(min_width=550):
+              with gr.Row(elem_classes = "panelm", elem_id = "row60"):
+                added_imgs[60] = gr.Image(height = 75, width = 75, min_width = 75, show_label = False, container = True, show_download_button = False, interactive = False)
+              with gr.Row(elem_classes = "panelm", elem_id = "row61"):
+                added_imgs[61] = gr.Image(height = 75, width = 75, min_width = 75, show_label = False, container = True, show_download_button = False, interactive = False)
+              with gr.Row(elem_classes = "panelm", elem_id = "row62"):
+                added_imgs[62] = gr.Image(height = 75, width = 75, min_width = 75, show_label = False, container = True, show_download_button = False, interactive = False)
+              with gr.Row(elem_classes = "panelm", elem_id = "row63"):
+                added_imgs[63] = gr.Image(height = 75, width = 75, min_width = 75, show_label = False, container = True, show_download_button = False, interactive = False)
+              with gr.Row(elem_classes = "panelm", elem_id = "row64"):
+                added_imgs[64] = gr.Image(height = 75, width = 75, min_width = 75, show_label = False, container = True, show_download_button = False, interactive = False)
+              with gr.Row(elem_classes = "panelm", elem_id = "row65"):
+                added_imgs[65] = gr.Image(height = 75, width = 75, min_width = 75, show_label = False, container = True, show_download_button = False, interactive = False)
+            with gr.Row(min_width=550):
+              with gr.Row(elem_classes = "panelm", elem_id = "row66"):
+                added_imgs[66] = gr.Image(height = 75, width = 75, min_width = 75, show_label = False, container = True, show_download_button = False, interactive = False)
+              with gr.Row(elem_classes = "panelm", elem_id = "row67"):
+                added_imgs[67] = gr.Image(height = 75, width = 75, min_width = 75, show_label = False, container = True, show_download_button = False, interactive = False)
+              with gr.Row(elem_classes = "panelm", elem_id = "row68"):
+                added_imgs[68] = gr.Image(height = 75, width = 75, min_width = 75, show_label = False, container = True, show_download_button = False, interactive = False)
+              with gr.Row(elem_classes = "panelm", elem_id = "row69"):
+                added_imgs[69] = gr.Image(height = 75, width = 75, min_width = 75, show_label = False, container = True, show_download_button = False, interactive = False)
+              with gr.Row(elem_classes = "panelm", elem_id = "row70"):
+                added_imgs[70] = gr.Image(height = 75, width = 75, min_width = 75, show_label = False, container = True, show_download_button = False, interactive = False)
+              with gr.Row(elem_classes = "panelm", elem_id = "row71"):
+                added_imgs[71] = gr.Image(height = 75, width = 75, min_width = 75, show_label = False, container = True, show_download_button = False, interactive = False)                                                                                                     
             #image_selected = gr.Image(height = 1000, wdth = 550, show_label = False, container = True, show_download_button = False)
           with gr.Column(scale = 1):
             multiCaption = gr. Button(value = "Multi Image Detect Captions", variant="primary", scale = 1, size="sm", visible = False, elem_id="multiCaption")
@@ -842,6 +923,8 @@ def on_ui_tabs():
           text1 = gr.Textbox(placeholder = "Insert folder location", max_lines = 1,  scale = 1, show_label=False , elem_id = "ifl")
           with gr.Row(elem_id = "importFR"):
              importF =  gr.Button(value="Import", variant="primary", scale = 1, size="sm", elem_id = "importF", elem_classes = "import0")
+          with gr.Row(elem_id = "processFR"):
+             processF =  gr.Button(value="Process All", variant="primary", scale = 1, size="sm", elem_id = "processF", elem_classes = "import0")   
           importFDone = gr.Label(value="", show_label=False, container = False, elem_id = "id1")
           gr.Label(value="Select Detection Model", show_label=False, container = False, elem_id = "sdm")
           sdm = gr.Dropdown(["yolov3u.pt", "yolov5x6u.pt", "yolov8x.pt"], value = "yolov3u.pt", show_label=False, container = False, elem_id = "ddd")
@@ -959,16 +1042,17 @@ def on_ui_tabs():
       #multiDetect.click(multi_img_detection, inputs=[sdm], outputs=[label1])
       #add.click(no_fn, None, None, _js = "disable_buttons").then(no_fn, None, None, _js = "AddToDataBase")
       #addAI.click(no_fn, None, None, _js = "disable_buttons").then(no_fn, None, None, _js = "AddMultiToDataBase")
-      addAI.click(no_fn, None, None, _js = "disable_buttons").then(add_all,  inputs=None, outputs=[image]+[added_imgs[i] for i in range(0, 48)]).then(None, None, None, _js = "enabled_buttons")
-      processImgs.click(no_fn, None, None, _js = "disable_buttons").then(multi_img_detection, inputs=[sdm], outputs=[label1]).then(multi_img_caption, inputs=[scm], outputs=[label2]).then(insert_multi_into_all_table_and_reset_images, None, outputs = [image] + [added_imgs[i] for i in range(24, 48)]).then(None, None, None, _js = "enabled_buttons")
+      addAI.click(no_fn, None, None, _js = "disable_buttons").then(add_all,  inputs=None, outputs=[image]+[added_imgs[i] for i in range(0, 72)]).then(None, None, None, _js = "enabled_buttons")
+      processImgs.click(no_fn, None, None, _js = "disable_buttons").then(multi_img_detection, inputs=[sdm], outputs=[label1]).then(multi_img_caption, inputs=[scm], outputs=[label2]).then(insert_multi_into_all_table_and_reset_images, None, outputs = [image] + [added_imgs[i] for i in range(24, 72)]).then(None, None, None, _js = "enabled_buttons")
       label1.change(label_rest, outputs = [label1])
-      label2.change(label_rest, outputs = [label2])  
-      importF.click(no_fn, None, None, _js = "disable_buttons").then(update_images, inputs=[text1], outputs = [image] + [added_imgs[i] for i in range(0, 48)] +  [importFDone]).then(None, None, None, _js = "enabled_buttons")
-      importU.click(no_fn, None, None, _js = "disable_buttons").then(import_from_url, inputs=[text2], outputs = [image] + [added_imgs[i] for i in range(0, 48)] +  [importUDone]).then(None, None, None, _js = "enabled_buttons")
+      label2.change(label_rest, outputs = [label2])
+      processF.click(no_fn, None, None, _js = "disable_buttons").then(process_images, inputs=[text1], outputs = [image] + [added_imgs[i] for i in range(0, 72)]).then(multi_img_detection, inputs=[sdm], outputs=[label1]).then(multi_img_caption, inputs=[scm], outputs=[label2]).then(insert_multi_into_all_table_and_reset_images, None, outputs = [image] + [added_imgs[i] for i in range(24, 72)]).then(None, None, None, _js = "enabled_buttons")
+      importF.click(no_fn, None, None, _js = "disable_buttons").then(update_images, inputs=[text1], outputs = [image] + [added_imgs[i] for i in range(0, 72)] +  [importFDone]).then(None, None, None, _js = "enabled_buttons")
+      importU.click(no_fn, None, None, _js = "disable_buttons").then(import_from_url, inputs=[text2], outputs = [image] + [added_imgs[i] for i in range(0, 72)] +  [importUDone]).then(None, None, None, _js = "enabled_buttons")
       less.click(no_fn, None, None, _js = "disable_buttons").then(minus, outputs = [image]).then(None, None, None, _js = "enabled_buttons")
       greater.click(no_fn, None, None, _js = "disable_buttons").then(plus, outputs = [image]).then(None, None, None, _js = "enabled_buttons")
-      addImg.click(no_fn, None, None, _js = "disable_buttons").then(add_image, inputs = None, outputs = [image]+[added_imgs[i] for i in range(0, 48)]).then(None, None, None, _js = "enabled_buttons")
-      removeImg.click(no_fn, None, None, _js = "disable_buttons").then(remove_image, inputs = None, outputs = [image]+[added_imgs[i] for i in range(0, 48)]).then(None, None, None, _js = "enabled_buttons")
+      addImg.click(no_fn, None, None, _js = "disable_buttons").then(add_image, inputs = None, outputs = [image]+[added_imgs[i] for i in range(0, 72)]).then(None, None, None, _js = "enabled_buttons")
+      removeImg.click(no_fn, None, None, _js = "disable_buttons").then(remove_image, inputs = None, outputs = [image]+[added_imgs[i] for i in range(0, 72)]).then(None, None, None, _js = "enabled_buttons")
       reset1.click(no_fn, None, None, _js = "disable_buttons").then(reset_objsettings, outputs = [mcw, mch, mcfl]).then(None, None, None, _js = "enabled_buttons")
       reset2.click(no_fn, None, None, _js = "disable_buttons").then(reset_capsettings, outputs = [mcpl]).then(None, None, None, _js = "enabled_buttons")
       save1.click(no_fn, None, None, _js = "disable_buttons").then(save_settings, inputs=[mcw, mch, mcfl, mcpl], outputs = [objsv]).then(None, None, None, _js = "enabled_buttons")
@@ -979,7 +1063,7 @@ def on_ui_tabs():
       importUDone.change(label_rest, outputs = [importUDone])
       hidden_downloadBtn.click(hidden_checkdownload_fn, None, None).then(None, None, hidden_checkbox, _js = "dld_click")
       hidden_checkbox.change(hidden_checkbox_fn, [hidden_checkbox], [hidden_checkbox])
-      for i in range(0, 48):
+      for i in range(0, 72):
          added_imgs[i].select(img_clicked, inputs = [gr.Number(value=i, precision=0, visible=False)], outputs = [image])       
   return [(Decentre, "Decentre", "Decentre")]
 
