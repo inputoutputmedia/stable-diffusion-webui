@@ -142,7 +142,7 @@ def multi_img_detection(dm = "yolov3u.pt", progress=gr.Progress()):
         endTimes = [start]
         #processes = ["Object Detection"]
         for i in progress.tqdm(range(0,len(added_imgs)), desc="Processing..."):
-                op = subprocess.Popen(["python", "extensions/decentre/scripts/multi_img_detection.pyt", added_imgs[i], "False", dm, str(maxImgId)], stdout=subprocess.PIPE, universal_newlines=True)
+                op = subprocess.Popen(["python", "extensions/decentre/scripts/multi_img_detection.pyt", added_imgs[i], dm, str(maxImgId)], stdout=subprocess.PIPE, universal_newlines=True)
                 iter_line = iter(op.stdout.readline, "") 
                 while(True):
                     stdout_line = next(iter_line)
@@ -171,7 +171,7 @@ def multi_img_caption(cm = "llava-1.5-7b-hf", progress=gr.Progress()):
         endTimes = [start]
         processes = ["Object Detection", "Caption Detection", "Object Caption Detection"]
         for i in progress.tqdm(range(0,len(added_imgs)), desc="Processing..."):
-                op = subprocess.Popen(["python", "extensions/decentre/scripts/multi_img_caption.pyt", added_imgs[i], "True", cm, str(maxImgId)], stdout=subprocess.PIPE, universal_newlines=True)
+                op = subprocess.Popen(["python", "extensions/decentre/scripts/multi_img_caption.pyt", added_imgs[i], cm, str(maxImgId)], stdout=subprocess.PIPE, universal_newlines=True)
                 iter_line = iter(op.stdout.readline, "") 
                 for j in range(0,2):   
                     while(True):

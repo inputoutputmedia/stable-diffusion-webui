@@ -263,6 +263,7 @@ function disable_buttons(){
     document.getElementById("reset2").disabled = true;
     document.getElementById("save1").disabled = true;
     document.getElementById("save2").disabled = true;
+    document.getElementById("processF").disabled = true;
 }
 
 function enabled_buttons(){
@@ -278,6 +279,7 @@ function enabled_buttons(){
     document.getElementById("reset2").disabled = false;
     document.getElementById("save1").disabled = false;
     document.getElementById("save2").disabled = false;
+    document.getElementById("processF").disabled = false;
 }
 
 /**

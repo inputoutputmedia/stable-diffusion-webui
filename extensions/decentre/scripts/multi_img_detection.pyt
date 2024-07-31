@@ -89,7 +89,7 @@ dbFile = "C:/decentre/appdata/decentre.db"
 db = sqlite3.connect(dbFile)
 mycursor = db.cursor()
 
-def detect_image(image_path_or_url: str, isCaption: str, model_path: str, maxImgId : int):
+def generate_caption(image_path_or_url: str, model_path: str, maxImgId : int):
     sql2 = "SELECT IFNULL(MAX(object_id), 0) FROM object_detection_table"
     sql3 = "INSERT INTO image_table (image_id, image_path, prompt_text, generation_time, user_id) VALUES (?, ?, ?, ?, ?)"
     sql4 = "INSERT INTO object_detection_table (object_id, image_id, model_used, object_name, object_path, confidence_score, bounding_box, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
@@ -136,4 +136,4 @@ def detect_image(image_path_or_url: str, isCaption: str, model_path: str, maxImg
     print("objs detected")
     db.close()    
 
-detect_image(sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4])) 
+generate_caption(sys.argv[1], sys.argv[2], int(sys.argv[3])) 

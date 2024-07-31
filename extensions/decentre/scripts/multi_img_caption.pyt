@@ -182,9 +182,9 @@ dbFile = "C:/decentre/appdata/decentre.db"
 db = sqlite3.connect(dbFile)
 mycursor = db.cursor()
 
-def detect_image(image_path_or_url: str, isCaption: str, model_path: str, maxImgId : int):
+def detect_image(image_path_or_url: str, model_path: str, maxImgId : int):
     sql5 = "SELECT IFNULL(MAX(caption_id), 0) FROM captions_table"
-    sql6 = "INSERT INTO captions_table (caption_id, image_id, text, model_used, created_at) VALUES (?, ?, ?, ?, ?)"
+    sql6 = "INSERT INTO captions_table (caption_id, image_id, text, model_used, created_at, caption_text) VALUES (?, ?, ?, ?, ?, ?)"
     sql7 = "SELECT IFNULL(MAX(object_caption_id), 0) FROM object_captions"
     sql8 = "INSERT INTO object_captions (object_caption_id, object_id, image_id, caption_text, model_used, created_at) VALUES (?, ?, ?, ?, ?, ?)"
 
@@ -197,16 +197,17 @@ def detect_image(image_path_or_url: str, isCaption: str, model_path: str, maxImg
 
     created_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-    val3 = []
     #print("cap detection:{}".format(len(safe_texts)))
+    safe_text = ""
+    safe_txt_List = []
     for t in safe_texts:
-        if len(t) < capLen:
-            continue
+        if len(t) >= capLen:
+            safe_text = safe_text + " " + t
+            safe_txt_List.append(t)
 
-        val3.append((maxCapId, maxImgId, t, model_path, created_at))
-        maxCapId += 1
-
-    mycursor.executemany(sql6, val3)
+    val3 = (maxCapId, maxImgId, safe_text, model_path, created_at, json.dumps(safe_txt_List))
+    maxCapId += 1
+    mycursor.execute(sql6, val3)
     db.commit()
 
     print("caps detected")
@@ -236,4 +237,4 @@ def detect_image(image_path_or_url: str, isCaption: str, model_path: str, maxImg
 
     db.close()    
 
-detect_image(sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4])) 
+detect_image(sys.argv[1], sys.argv[2], int(sys.argv[3])) 
