@@ -8,4 +8,3 @@ requests
 torch
 pathlib
 bitsandbytes
-flash-attn --install-option='--no-build-isolation'
